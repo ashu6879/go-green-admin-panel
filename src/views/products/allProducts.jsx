@@ -629,29 +629,7 @@ const handleSave = async () => {
                       {/* Show existing gallery images first, then new uploads */}
                       <div className="mt-2 d-flex flex-wrap">
                         {[
-                          // ...(selectedUser.gallery_images || []).map((img, index) => {
-                          //   const imageUrl = typeof img === "string" ? `${BASE_URL}${img}` : `${BASE_URL}${img.image_path}`;
-                          //   return (
-                          //     <div key={index} className="position-relative m-1">
-                          //       <img
-                          //         src={imageUrl}
-                          //         alt={`Gallery Preview ${index + 1}`}
-                          //         className="img-thumbnail"
-                          //         width="60"
-                          //         height="60"
-                          //       />
-                          //       {/* Delete button */}
-                          //       <button
-                          //         type="button"
-                          //         className="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle"
-                          //         style={{ fontSize: "10px", lineHeight: "1"}}
-                          //         onClick={() => handleDeleteGalleryImage(index)}
-                          //       >
-                          //         ✖
-                          //       </button>
-                          //     </div>
-                          //   );
-                          // }),
+                          // ...(selectedUser.gallery_images || []).map((img, index) => { //   const imageUrl = typeof img === "string" ? `${BASE_URL}${img}` : `${BASE_URL}${img.image_path}`; //   return ( //     <div key={index} className="position-relative m-1"> //       <img //         src={imageUrl} //         alt={`Gallery Preview ${index + 1}`} //         className="img-thumbnail" //         width="60" //         height="60" //       /> //       {/* Delete button */} //       <button //         type="button" //         className="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle" //         style={{ fontSize: "10px", lineHeight: "1"}} //         onClick={() => handleDeleteGalleryImage(index)} //       > //         ✖ //       </button> //     </div> //   ); // }),
                           ...previewImages.map((imageUrl, index) => (
                             <div key={`new-${index}`} className="position-relative m-1">
                               <img
