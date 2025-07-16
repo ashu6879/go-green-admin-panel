@@ -71,8 +71,9 @@ img.logo.logo-lg {
     border-bottom: 1px solid white;
 }
 .page-header {
+    // top: 0;
     // background: #088B46 !important;
-    border: 2px solid #088B46;
+    // border: 2px solid #088B46;
 }
 .material-icons-two-tone.text-primary {
     background-color: #088B46;
@@ -120,7 +121,9 @@ img.logo.logo-lg {
 .pc-item{
     border-bottom: 1px solid #088b46 !important;
 }
-
+.pc-header{
+    top: 0;
+}
 //sandeep
 // ul.pc-navbar .pc-link.active i, ul.pc-navbar .pc-link:focus i {
 //     background-color: white !important;
@@ -189,4 +192,18 @@ img.logo.logo-lg {
     border-color:#088B46;
     outline: 0;
     box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.2);
+}
+
+
+
+.container-p0{
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+}
+
+.custom-row-small {
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
 }

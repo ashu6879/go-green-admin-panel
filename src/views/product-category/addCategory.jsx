@@ -1,170 +1,155 @@
-import React, { useState, useRef } from "react";
-import { Card, Form, Button, InputGroup, Row, Col, Container, Modal } from "react-bootstrap";
-import FeatherIcon from "feather-icons-react";
+import React, { useState } from "react";
+import { Form, Input, Button, Upload, Modal, Card } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { addCategory } from "../../services/apiService";
 
+const { Dragger } = Upload;
+
 const AddCategory = () => {
-    const API_URL = import.meta.env.VITE_API_URL;
-    const fileInputRef = useRef(null);  // ✅ File input reference
+  const [form] = Form.useForm();
+  const [preview, setPreview] = useState(null);
+  const [file, setFile] = useState(null);
+  const [fileList, setFileList] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-    const [formData, setFormData] = useState({
-        name: "",
-        description: "",
-        category_logo: null, 
-    });
+  const handleLogoChange = info => {
+    setError("");
+    let newFileList = info.fileList.slice(-1); // Only keep the latest file
+    setFileList(newFileList);
+    const fileObj = newFileList[0]?.originFileObj;
+    if (info.file.status === "removed" || !fileObj) {
+      setFile(null);
+      setPreview(null);
+      return;
+    }
+    // Validate file type and size
+    const isImage = fileObj.type.startsWith("image/");
+    const isLt2M = fileObj.size / 1024 / 1024 < 2;
+    if (!isImage) {
+      setError("You can only upload image files!");
+      setFileList([]);
+      return;
+    }
+    if (!isLt2M) {
+      setError("Image must be smaller than 2MB!");
+      setFileList([]);
+      return;
+    }
+    setFile(fileObj);
+    setPreview(URL.createObjectURL(fileObj));
+  };
 
-    const [preview, setPreview] = useState(null);
-    const [error, setError] = useState("");
-    const [showModal, setShowModal] = useState(false);
+  const handleFinish = async values => {
+    setError("");
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("description", values.description);
+      if (file) {
+        formData.append("category_logo", file);
+      }
+      const result = await addCategory(formData);
+      if (result.success) {
+        setShowModal(true);
+        form.resetFields();
+        setFile(null);
+        setPreview(null);
+        setFileList([]);
+      } else {
+        setError(result.error?.message || "Failed to add category.");
+      }
+    } catch (err) {
+      setError("Failed to add category. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleChange = (e) => {
-        const { name, value, type, files } = e.target;
-        if (type === "file") {
-            const file = files[0];
-            if (file) {
-                setFormData({ ...formData, category_logo: file });
-                setPreview(URL.createObjectURL(file)); // ✅ Show image preview
-            }
-        } else {
-            setFormData({ ...formData, [name]: value });
-        }
-    };
+  return (
+    <div style={{ maxWidth: 600, margin: "40px auto" }}>
+      <Card title="Add Category" bordered={false}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleFinish}
+          autoComplete="off"
+        >
+          <Form.Item
+            label="Category Name"
+            name="name"
+            rules={[{ required: true, message: "Please enter category name" }]}
+          >
+            <Input placeholder="Category Name" />
+          </Form.Item>
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const formDataToSend = new FormData();
-    
-        // ✅ Append text fields
-        formDataToSend.append("name", formData.name);
-        formDataToSend.append("description", formData.description);
-    
-        // ✅ Append file if exists
-        if (formData.category_logo) {
-            formDataToSend.append("category_logo", formData.category_logo);
-        }
-        try {
-            const result = await addCategory(formDataToSend);
-    
-            if (result.success) {
-                // ✅ Show success modal
-                setShowModal(true);
-    
-                // ✅ Reset form fields & preview
-                setFormData({
-                    name: "",
-                    description: "",
-                    category_logo: null,
-                });
-                setPreview(null);
-    
-                // ✅ Clear file input manually
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                }
-            } else {
-                setError(result.error?.message || "Failed to add category.");
-            }
-    
-        } catch (err) {
-            setError("Failed to add category. Please try again.");
-        }
-    };
+          <Form.Item
+            label="Category Description"
+            name="description"
+            rules={[{ required: true, message: "Please enter category description" }]}
+          >
+            <Input.TextArea rows={4} placeholder="Enter category description..." />
+          </Form.Item>
 
-    return (
-        <Container fluid className="p-4">
-            <Card className="borderless w-100">
-                <Card.Body>
-                    <h4 className="mb-3 f-w-400 text-center">Add Category</h4>
-                    {error && <p className="text-danger text-center">{error}</p>}
-                    
-                    <Form onSubmit={handleSubmit} autoComplete="off">
-                        <Row>
-                            {/* Left Column - Name & Logo */}
-                            <Col md={6} className="mb-3">
-                                {/* Category Name */}
-                                <Form.Label>Category Name</Form.Label>
-                                <InputGroup className="mb-3">
-                                    <InputGroup.Text>
-                                        <FeatherIcon icon="tag" />
-                                    </InputGroup.Text>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Category Name"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </InputGroup>
+          <Form.Item
+            label="Category Logo"
+            required
+            rules={[{ required: true, message: "Please upload a logo" }]}
+          >
+            <Dragger
+              name="category_logo"
+              accept="image/*"
+              multiple={false}
+              showUploadList={false}
+              beforeUpload={() => false}
+              onChange={handleLogoChange}
+              customRequest={() => {}}
+              fileList={fileList}
+            >
+              <p className="ant-upload-drag-icon">
+                <PlusOutlined style={{ fontSize: 32 }} />
+              </p>
+              <p className="ant-upload-text">Click or drag image to this area to upload</p>
+              <p className="ant-upload-hint">(Only image files, max 2MB)</p>
+            </Dragger>
+            {preview && (
+              <div style={{ marginTop: 12 }}>
+                <img
+                  src={preview}
+                  alt="Logo Preview"
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #eee" }}
+                />
+              </div>
+            )}
+          </Form.Item>
 
-                                {/* Upload Logo */}
-                                <Form.Label>Upload Logo</Form.Label>
-                                <Form.Control
-                                    type="file"
-                                    accept="image/*"
-                                    name="category_logo"
-                                    onChange={handleChange}
-                                    ref={fileInputRef}  // ✅ Attach ref to file input
-                                    required
-                                />
+          {error && <div style={{ color: "red", marginBottom: 12 }}>{error}</div>}
 
-                                {/* Logo Preview */}
-                                {preview && (
-                                    <div className="mt-3">
-                                        <p>Logo Preview:</p>
-                                        <img
-                                            src={preview}
-                                            alt="Logo Preview"
-                                            className="img-fluid"
-                                            style={{ maxWidth: "60px", maxHeight: "60px", borderRadius: "5px" }}
-                                        />
-                                    </div>
-                                )}
-                            </Col>
-
-                            {/* Right Column - Description */}
-                            <Col md={6} className="mb-3">
-                                <Form.Label>Category Description</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    rows={5}
-                                    placeholder="Enter category description..."
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </Col>
-                        </Row>
-
-                        {/* Submit Button */}
-                        <Row>
-                            <Col md={12} className="text-center">
-                                <Button type="submit" className="btn btn-primary w-50">
-                                    Add Category
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Form>
-                </Card.Body>
-            </Card>
-
-            {/* Success Modal */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Category Created Successfully</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>The category has been added successfully!</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="success" onClick={() => setShowModal(false)}>
-                        OK
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
-    );
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block>
+              Add Category
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
+      <Modal
+        open={showModal}
+        onCancel={() => setShowModal(false)}
+        footer={null}
+        centered
+      >
+        <div style={{ textAlign: "center" }}>
+          <h3>Category Created Successfully</h3>
+          <p>The category has been added successfully!</p>
+          <Button type="primary" onClick={() => setShowModal(false)}>
+            OK
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
 };
 
 export default AddCategory;

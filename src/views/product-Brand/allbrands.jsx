@@ -1,297 +1,301 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Pencil, Trash } from "react-bootstrap-icons";
-import { Modal, Button, Form, Table, Container } from "react-bootstrap";
-import { getAllCategories,productfetchBrands } from "../../services/apiService";
+import React from "react";
+import { Table, Input, Select, Button, Space, Modal, Form, Upload, Switch } from "antd";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import useBrandHook from "./usebrandhook";
 
-const ProductBrandList = () => {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
-  const [brands, setBrands] = useState([]);
-  const [error, setError] = useState("");
-  const token = localStorage.getItem("token");
+const { Option } = Select;
 
-  const [show, setShow] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState(null);
-  const [previewImage, setPreviewImage] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedBrandId, setSelectedBrandId] = useState(null);
-  const [categories, setCategories] = useState([]); // Stores categories from API
+const AllBrands = () => {
+  const {
+    data,
+    loading,
+    error,
+    pagination,
+    sorter,
+    search,
+    setSearch,
+    categoryFilter,
+    setCategoryFilter,
+    categories,
+    onTableChange,
+    editModal,
+    openEditModal,
+    closeEditModal,
+    selectedBrand,
+    previewImage,
+    handleImageChange,
+    formLoading,
+    deleteModal,
+    openDeleteModal,
+    closeDeleteModal,
+    handleEditSave,
+    handleDelete,
+  } = useBrandHook();
 
-  useEffect(() => {
-    const fetchBrands = async () => {
-        try {
-            const response = await productfetchBrands(); // Using API service
-            if (response.success) {
-                setBrands(response.data); // ✅ Sets array if successful
-            } else {
-                console.error("Failed to fetch brands:", response.error);
+  const [form] = Form.useForm();
+  const [editFileList, setEditFileList] = React.useState([]);
+  const [editPreview, setEditPreview] = React.useState("");
+
+  React.useEffect(() => {
+    if (editModal && selectedBrand) {
+      setEditPreview(previewImage);
+      setEditFileList([]);
+      form.setFieldsValue({
+        name: selectedBrand.name,
+        description: selectedBrand.description,
+        categoryid: selectedBrand.categoryid,
+        status: selectedBrand.status === 1,
+      });
             }
-        } catch (err) {
-            console.error("Error fetching brands:", err);
-        }
-    };
+  }, [editModal, selectedBrand, previewImage, form]);
 
-    const fetchCategories = async () => {
-        try {
-            const response = await getAllCategories(); // Using API service
-            if (response.success) {
-                setCategories(response.data); // ✅ Sets array if successful
-            } else {
-                console.error("Failed to fetch categories:", response.error);
-            }
-        } catch (err) {
-            console.error("Error fetching categories:", err);
-        }
-    };
-
-    fetchBrands();
-    fetchCategories();
-
-// ✅ Add empty dependency array to run **only on mount**
-}, []); 
-
-
-  const handleDelete = (brandId) => {
-    setSelectedBrandId(brandId);
-    setShowDeleteModal(true);
+  const handleEditLogoChange = info => {
+    let newFileList = info.fileList.slice(-1);
+    setEditFileList(newFileList);
+    const fileObj = newFileList[0]?.originFileObj;
+    if (info.file.status === "removed" || !fileObj) {
+      setEditPreview("");
+      handleImageChange(null);
+      return;
+    }
+    setEditPreview(URL.createObjectURL(fileObj));
+    handleImageChange(fileObj);
   };
 
-  const confirmDelete = async () => {
-    if (selectedBrandId) {
-      try {
-        if (token) {
-          const config = {
-            headers: { Authorization: `Bearer ${token}` },
-            data: { id: selectedBrandId },
-          };
-          await axios.delete(`${API_URL}/product-brands`, config);
-          setBrands(brands.filter((brand) => brand.id !== selectedBrandId));
-          setShowDeleteModal(false);
-        }
-      } catch (err) {
-        setError("Failed to delete brand. Please try again.");
-      }
+  // Add status toggle handler
+  const handleToggleActive = (brandId, isActive) => {
+    // You can implement this in the hook for API update if needed
+    // For now, just update local state
+    // Optionally, call an API to persist
+    // setData(prev => prev.map(b => b.id === brandId ? { ...b, status: isActive ? 1 : 0 } : b));
+    // For now, just call handleEditSave with status change
+    const brand = data.find(b => b.id === brandId);
+    if (brand) {
+      handleEditSave({
+        name: brand.name,
+        description: brand.description,
+        categoryid: brand.categoryid,
+        status: isActive,
+      }, null);
     }
   };
 
-  const handleUpdate = (brand) => {
-    setSelectedBrand(brand);
-    setPreviewImage(brand.brand_logo ? `${IMAGE_BASE_URL}${brand.brand_logo}` : "");
-    setShow(true);
-  };
-
-  const handleClose = () => {
-    setShow(false);
-    setSelectedBrand(null);
-    setPreviewImage("");
-  };
-
-  const handleSave = async () => {
-    try {
-      if (token && selectedBrand) {
-        const config = { 
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data", 
-          }
-        };
-  
-        const formData = new FormData();
-        formData.append("id", selectedBrand.id);
-        formData.append("name", selectedBrand.name);
-        formData.append("description", selectedBrand.description);
-        formData.append("categoryid", selectedBrand.categoryid);
-        formData.append("status", selectedBrand.status);
-  
-        if (selectedBrand.brand_logo instanceof File) {
-          formData.append("brand_logo", selectedBrand.brand_logo); // New image
-        } else if (selectedBrand.brand_logo) {
-          formData.append("existing_brand_logo", selectedBrand.brand_logo); // Retain existing image
-        }
-        console.log("updated brand",formData)
-        const response = await axios.put(`${API_URL}/product-brands`, formData, config);
-        console.log("Update Response:", response.data.productBrand);
-  
-        if (response.data && response.data.productBrand) {
-          setBrands((prevBrands) =>
-            prevBrands.map((brand) =>
-              brand.id === selectedBrand.id ? response.data.productBrand : brand
-            )
-          );
-        }
-  
-        setShow(false);
-        setSelectedBrand(null);
-        setPreviewImage("");
-      }
-    } catch (err) {
-      console.error("Update failed:", err.response?.data || err.message);
-      setError("Failed to update brand.");
-    }
-  };
-  
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-      setSelectedBrand({ ...selectedBrand, brand_logo: file });
-    } else {
-      setSelectedBrand({ ...selectedBrand, brand_logo: selectedBrand.brand_logo });
-    }
-  };
-
-  return (
-    <Container fluid className="mt-4">
-      <div className="table-responsive p-2 bg-white">
-      {(brands || []).length === 0 ? (
-          <p style={{ color: "red", textAlign: "center", fontSize: "15px" }}>
-            No Brands Found
-          </p>
-        ) : (
-        <Table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Brand Name</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Logo</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {brands.map((brand, index) => (
-              <tr key={brand.id || index}>
-                <td>{index + 1}</td>
-                <td>{brand.name}</td>
-                <td>{brand.description}</td>
-                <td>{brand.category_name}</td>
-                <td>
-                  {brand.brand_logo ? (
-                    <img src={`${IMAGE_BASE_URL}${brand.brand_logo}`} alt="Brand Logo" width="50" height="50" />
+  const columns = [
+    {
+      title: '#',
+      dataIndex: 'sr',
+      key: 'sr',
+      width: 60,
+      render: (_, __, idx) => (pagination.current - 1) * pagination.pageSize + idx + 1,
+    },
+    {
+      title: 'Brand Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: true,
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      ellipsis: true,
+    },
+    {
+      title: 'Category',
+      dataIndex: 'category_name',
+      key: 'category_name',
+      sorter: true,
+    },
+    {
+      title: 'Logo',
+      dataIndex: 'brand_logo',
+      key: 'brand_logo',
+      width: 100,
+      render: (logo) =>
+        logo ? (
+          <img
+            src={logo.startsWith('http') ? logo : `${import.meta.env.VITE_IMAGE_BASE_URL}${logo}`}
+            alt="Brand Logo"
+            width={50}
+            height={50}
+            style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+          />
                   ) : (
                     <span>No Image</span>
-                  )}
-                </td>
-                <td>{brand.status === 1 ? "Active" : "Inactive"}</td>
-                <td>
-                  <button className="btn btn-primary btn-sm me-2" onClick={() => handleUpdate(brand)}>
-                    <Pencil />
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(brand.id)}>
-                    <Trash />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-        )}
+        ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status, record) => (
+        <Switch
+          checked={status === 1}
+          checkedChildren="Active"
+          unCheckedChildren="Inactive"
+          onChange={checked => handleToggleActive(record.id, checked ? 1 : 0)}
+        />
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 160,
+      render: (_, record) => (
+        <Space>
+          <Button icon={<EditOutlined />} onClick={() => openEditModal(record)} />
+          <Button icon={<DeleteOutlined />} danger onClick={() => openDeleteModal(record)} />
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <div className="pt-4">
+      <h4 style={{ marginBottom: 16 }}>All Brands</h4>
+      <div style={{ marginBottom: 16 }}>
+        <div className="row g-2">
+          <div className="col-12 col-md-2">
+            <Input.Search
+              placeholder="Search brands"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              allowClear
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div className="col-12 col-md-2">
+            <Select
+              placeholder="Filter by Category"
+              value={categoryFilter || undefined}
+              onChange={val => setCategoryFilter(val)}
+              allowClear
+              showSearch
+              style={{ width: '100%' }}
+              filterOption={(input, option) =>
+                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+            >
+              {categories.map(cat => (
+                <Option key={cat.id} value={cat.id}>{cat.name}</Option>
+              ))}
+            </Select>
+          </div>
+        </div>
       </div>
-
-      {/* Modal for Updating Brand */}
-      <Modal show={show} onHide={handleClose} centered size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title className="fw-bold text-primary">Update Brand</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedBrand && (
-            <Form>
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold">Brand Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={selectedBrand.name}
-                  onChange={(e) => setSelectedBrand({ ...selectedBrand, name: e.target.value })}
+      <Table
+        columns={columns}
+        dataSource={data}
+        loading={loading}
+        pagination={pagination}
+        onChange={onTableChange}
+        rowKey={record => record.id}
+        scroll={{ x: 'max-content' }}
                 />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold">Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  value={selectedBrand.description}
-                  onChange={(e) => setSelectedBrand({ ...selectedBrand, description: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Select Parent Category</Form.Label>
-                <Form.Control
-                  as="select"
-                  name="categoryid" // Ensure name matches API field
-                  value={selectedBrand.categoryid || ""} // Use categoryid from API response
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    console.log("Selected Category ID:", selectedId); // Debugging output
-                    setSelectedBrand({
-                      ...selectedBrand,
-                      categoryid: selectedId, // Send selected category ID
-                    });
-                  }}
-                  required
-                >
-                  <option value="">-- Select Category --</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name} {/* Display category name */}
-                    </option>
+      {/* Edit Modal */}
+      <Modal
+        open={editModal}
+        onCancel={closeEditModal}
+        title="Edit Brand"
+        footer={null}
+        destroyOnClose
+        width={700}
+        zIndex={2000}
+      >
+        {selectedBrand && (
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={values => handleEditSave(values, editFileList[0]?.originFileObj)}
+            initialValues={{
+              name: selectedBrand.name,
+              description: selectedBrand.description,
+              categoryid: selectedBrand.categoryid,
+              status: selectedBrand.status === 1,
+            }}
+          >
+            <div className="container-fluid">
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <Form.Item label="Brand Name" name="name" rules={[{ required: true, message: 'Please enter brand name' }]}> 
+                    <Input />
+                  </Form.Item>
+                </div>
+                <div className="col-12 col-md-6">
+                  <Form.Item label="Category" name="categoryid" rules={[{ required: true, message: 'Please select a category' }]}> 
+                    <Select
+                      placeholder="Select Category"
+                      showSearch
+                      filterOption={(input, option) =>
+                        option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                      }
+                    >
+                      {categories.map(cat => (
+                        <Option key={cat.id} value={cat.id}>{cat.name}</Option>
                   ))}
-                </Form.Control>
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold">Brand Logo</Form.Label>
-                <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
-                {previewImage && (
+                    </Select>
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <Form.Item label="Description" name="description">
+                    <Input.TextArea rows={5} />
+                  </Form.Item>
+                </div>
+                <div className="col-12 col-md-6">
+                  <Form.Item label="Brand Logo">
+                    <Upload.Dragger
+                      name="file"
+                      accept="image/*"
+                      multiple={false}
+                      showUploadList={false}
+                      beforeUpload={() => false}
+                      onChange={handleEditLogoChange}
+                      fileList={editFileList}
+                    >
+                      <p className="ant-upload-drag-icon">Drag & Drop or Click to Upload</p>
+                      <p className="ant-upload-text">Click or drag image to this area to upload</p>
+                    </Upload.Dragger>
+                    {editPreview && (
                   <div className="mt-2">
-                    <img src={previewImage} alt="Brand Preview" className="img-thumbnail" width="120" />
+                        <img src={editPreview} alt="Brand Preview" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }} />
                   </div>
                 )}
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold">Status</Form.Label>
-                <Form.Select
-                  value={selectedBrand.status}
-                  onChange={(e) => setSelectedBrand({ ...selectedBrand, status: Number(e.target.value) })}
-                >
-                  <option value={1}>Active</option>
-                  <option value={0}>Inactive</option>
-                </Form.Select>
-              </Form.Group>
-            </Form>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-12 d-flex justify-content-end gap-2">
+                  <Button onClick={closeEditModal} style={{ marginRight: 8 }}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSave}>
+                  <Button type="primary" htmlType="submit" loading={formLoading}>
             Save Changes
           </Button>
-        </Modal.Footer>
+                </div>
+              </div>
+            </div>
+          </Form>
+        )}
       </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this brand?</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            Yes, Delete
-          </Button>
-        </Modal.Footer>
+      {/* Delete Modal */}
+      <Modal
+        open={deleteModal}
+        onCancel={closeDeleteModal}
+        title="Confirm Deletion"
+        onOk={handleDelete}
+        okText="Yes, Delete"
+        cancelText="Cancel"
+        confirmLoading={formLoading}
+        zIndex={2000}
+      >
+        Are you sure you want to delete this brand?
       </Modal>
-    </Container>
+      {error && <div style={{ color: 'red', marginTop: 16 }}>{error}</div>}
+    </div>
   );
 };
 
-export default ProductBrandList;
+export default AllBrands;

@@ -11,7 +11,7 @@
   .pcoded-content {
     padding-left: 30px;
     padding-right: 30px;
-    padding-top: 30px;
+    // padding-top: 30px;
   }
 
   .page-header+.row {
@@ -34,17 +34,17 @@
 }
 
 .page-header {
-  background: var(--pc-breadcrumb-background);
-  box-shadow: var(--pc-breadcrumb-shadow);
+  // background: var(--pc-breadcrumb-background);
+  // box-shadow: var(--pc-breadcrumb-shadow);
   position: sticky;
   display: flex;
   align-items: center;
-  top: $header-height;
+  // top: $header-height;
   left: $sidebar-width;
   right: 0;
   z-index: 1023;
   min-height: 55px;
-  padding: 13px 30px;
+  // padding: 13px 30px;
 
   .page-block {
     width: 100%;
@@ -222,11 +222,11 @@
   .pc-container {
     margin-left: 0;
 
-    .page-header+.row,
-    .page-header+.pcoded-content,
-    .pcoded-content {
-      padding-top: 30px;
-    }
+    // .page-header+.row,
+    // .page-header+.pcoded-content,
+    // .pcoded-content {
+    //   padding-top: 30px;
+    // }
   }
 
   .page-header {

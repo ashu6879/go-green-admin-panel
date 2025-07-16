@@ -1,284 +1,273 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Pencil, Trash } from "react-bootstrap-icons";
-import { Modal, Button, Form, Table, Container } from "react-bootstrap";
-import { getAllCategories,getAllSubCategories } from "../../services/apiService";
+import React from "react";
+import { Table, Input, Select, Switch, Button, Space, Modal, Form, Upload } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import useSubcategoryHook from "./usesubcatagory";
 
-const SubcategoryList = () => {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
-  const [subcategories, setSubcategories] = useState([]);
-  const [error, setError] = useState("");
-  const token = localStorage.getItem("token");
+const { Option } = Select;
 
-  const [showModal, setShowModal] = useState(false);
-  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
-  const [previewImage, setPreviewImage] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
-  const [categories, setCategories] = useState([]); // Stores categories from API
+const AllSubCategory = () => {
+  const {
+    data,
+    loading,
+    error,
+    pagination,
+    sorter,
+    search,
+    setSearch,
+    parentFilter,
+    setParentFilter,
+    categories,
+    onTableChange,
+    handleToggleActive,
+    editModal,
+    openEditModal,
+    closeEditModal,
+    selectedSubcategory,
+    previewImage,
+    handleImageChange,
+    formLoading,
+    deleteModal,
+    openDeleteModal,
+    closeDeleteModal,
+    handleEditSave,
+    handleDelete,
+    statusLoading,
+    deleteLoading,
+  } = useSubcategoryHook();
 
-  useEffect(() => {
-            const fetchSubCategories = async () => {
-                try {
-                    const response = await getAllSubCategories(); // Pass catID
-                    if (response.success) {
-                      console.log(response.data)
-                      setSubcategories(response.data); // ✅ Sets array if successful
-                    } else {
-                        console.error("Failed to fetch categories:", response.error);
-                    }
-                } catch (err) {
-                    console.error("Error fetching categories:", err);
-                }
-            };
-    const fetchCategories = async () => {
-        try {
-            const response = await getAllCategories(); // Using API service
-            if (response.success) {
-                setCategories(response.data); // ✅ Sets array if successful
-            } else {
-                console.error("Failed to fetch categories:", response.error);
-            }
-        } catch (err) {
-            console.error("Error fetching categories:", err);
-        }
-    };
-  fetchCategories();
-  fetchSubCategories();
-  }, [API_URL, token]);
-  
+  const [form] = Form.useForm();
+  const [editFileList, setEditFileList] = React.useState([]);
+  const [editPreview, setEditPreview] = React.useState("");
 
-  const handleDelete = (subcategoryId) => {
-    setSelectedSubcategoryId(subcategoryId);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (selectedSubcategoryId) {
-      try {
-        if (token) {
-          const config = {
-            headers: { Authorization: `Bearer ${token}` },
-            data: { id: selectedSubcategoryId },
-          };
-          await axios.delete(`${API_URL}/subcategories`, config);
-          setSubcategories(subcategories.filter((sub) => sub.id !== selectedSubcategoryId));
-          setShowDeleteModal(false);
-        }
-      } catch (err) {
-        setError("Failed to delete subcategory. Please try again.");
-      }
+  React.useEffect(() => {
+    if (editModal && selectedSubcategory) {
+      setEditPreview(previewImage);
+      setEditFileList([]);
+      form.setFieldsValue({
+        name: selectedSubcategory.name,
+        description: selectedSubcategory.description,
+        category_id: selectedSubcategory.category_id,
+        status: selectedSubcategory.status === 1,
+      });
     }
-  };
+  }, [editModal, selectedSubcategory, previewImage, form]);
 
-  const handleUpdate = (subcategory) => {
-    setSelectedSubcategory(subcategory);
-    setPreviewImage(subcategory.subcategory_logo ? `${IMAGE_BASE_URL}${subcategory.subcategory_logo}` : "");
-    setShowModal(true);
-  };
-  
-
-  const handleClose = () => {
-    setShowModal(false);
-    setSelectedSubcategory(null);
-    setPreviewImage("");
-  };
-  const handleSave = async () => {
-    try {
-      if (token && selectedSubcategory) {
-        const config = { 
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data", 
-          }
-        };
-  
-        const formData = new FormData();
-        formData.append("id", selectedSubcategory.id);
-        formData.append("name", selectedSubcategory.name);
-        formData.append("description", selectedSubcategory.description);
-        formData.append("category_id", selectedSubcategory.category_id);
-        formData.append("status", selectedSubcategory.status);
-  
-        if (selectedSubcategory.subcategory_logo instanceof File) {
-          formData.append("subcategory_logo", selectedSubcategory.subcategory_logo); // New image
-        } else if (selectedSubcategory.category_logo) {
-          formData.append("existing_category_logo", selectedSubcategory.subcategory_logo); // Retain existing image
-        }
-  
-        // API call
-        const response = await axios.put(`${API_URL}/subcategories`, formData, config);
-        console.log("Update Response:", response.data.subcategories); // Debugging log
-  
-        if (response.data && response.data.subcategories) {
-          setSubcategories((prevCategories) =>
-            prevCategories.map((cat) =>
-              cat.id === selectedSubcategory.id ? response.data.subcategories : cat
-            )
-          );
-        }
-  
-        setShowModal(false);
-        setSelectedSubcategory(null);
-        setPreviewImage("");
-      }
-    } catch (err) {
-      console.error("Update failed:", err.response?.data || err.message);
-      setError("Failed to update category.");
+  const handleEditLogoChange = info => {
+    let newFileList = info.fileList.slice(-1);
+    setEditFileList(newFileList);
+    const fileObj = newFileList[0]?.originFileObj;
+    if (info.file.status === "removed" || !fileObj) {
+      setEditPreview("");
+      handleImageChange(null);
+      return;
     }
+    setEditPreview(URL.createObjectURL(fileObj));
+    handleImageChange(fileObj);
   };
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-      setSelectedSubcategory({ ...selectedSubcategory, subcategory_logo: file });
-    }
-  };
-  
+  const columns = [
+    {
+      title: '#',
+      dataIndex: 'sr',
+      key: 'sr',
+      width: 60,
+      render: (_, __, idx) => (pagination.current - 1) * pagination.pageSize + idx + 1,
+    },
+    {
+      title: 'Subcategory Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: true,
+    },
+    {
+      title: 'Category Name',
+      dataIndex: 'category_name',
+      key: 'category_name',
+      sorter: true,
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      ellipsis: true,
+    },
+    {
+      title: 'Logo',
+      dataIndex: 'subcategory_logo',
+      key: 'subcategory_logo',
+      width: 100,
+      render: (logo) =>
+        logo ? (
+          <img
+            src={logo.startsWith('http') ? logo : `${import.meta.env.VITE_IMAGE_BASE_URL}${logo}`}
+            alt="Subcategory Logo"
+            width={50}
+            height={50}
+            style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+          />
+        ) : (
+          <span>No Image</span>
+        ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status, record) => (
+        <Switch
+          checked={status === 1}
+          checkedChildren="Active"
+          unCheckedChildren="Inactive"
+          loading={statusLoading[record.id]}
+          onChange={checked => handleToggleActive(record.id, checked ? 1 : 0)}
+        />
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 160,
+      render: (_, record) => (
+        <Space>
+          <Button icon={<EditOutlined />} onClick={() => openEditModal(record)} />
+          <Button icon={<DeleteOutlined />} danger onClick={() => openDeleteModal(record)} />
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <Container fluid className="mt-4">
-      {error && <p className="text-danger">{error}</p>}
-      
-      <div className="table-responsive p-2 bg-white">
-      {subcategories.length === 0 ? (
-            <p style={{ color: "red", textAlign: "center", fontSize: "15px" }}>
-              No SubCategories Found
-            </p>
-          ) : (
-        <Table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Subcategory Name</th>
-              <th>Category Name</th>
-              <th>Description</th>
-              <th>Logo</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {subcategories.map((subcategory, index) => (
-              <tr key={subcategory.id || index}>
-                <td>{index + 1}</td>
-                <td>{subcategory.name}</td>
-                <td>{subcategory.category_name || "N/A"}</td>
-                <td>{subcategory.description || "No Description"}</td>
-                <td>
-                  {subcategory.subcategory_logo ? (
-                    <img src={`${IMAGE_BASE_URL}${subcategory.subcategory_logo}`} alt="Subcategory Logo" width="50" height="50" />
-                  ) : (
-                    <span>No Image</span>
-                  )}
-                </td>
-                <td>{subcategory.status === 1 ? "Active" : "Inactive"}</td>
-                <td>
-                  <button className="btn btn-primary btn-sm me-2" onClick={() => handleUpdate(subcategory)}>
-                    <Pencil />
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(subcategory.id)}>
-                    <Trash />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-        )}
-      </div>
+    <div className="pt-4">
+      <h4 style={{ marginBottom: 16 }}>All Subcategories</h4>
+      <Space style={{ marginBottom: 16 }}>
+        <Input.Search
+          placeholder="Search subcategories"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          allowClear
+          style={{ width: 220 }}
+        />
+        <Select
+          placeholder="Filter by Category"
+          value={parentFilter || undefined}
+          onChange={val => setParentFilter(val)}
+          allowClear
+          showSearch
+          style={{ width: 220 }}
+          filterOption={(input, option) =>
+            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }
+        >
+          {categories.map(cat => (
+            <Option key={cat.id} value={cat.id}>{cat.name}</Option>
+          ))}
+        </Select>
+      </Space>
+      <Table
+        columns={columns}
+        dataSource={data}
+        loading={loading}
+        pagination={pagination}
+        onChange={onTableChange}
+        rowKey={record => record.id}
+        scroll={{ x: 'max-content' }}
+      />
+      {/* Edit Modal */}
+      <Modal
+        open={editModal}
+        onCancel={closeEditModal}
+        title="Edit Subcategory"
+        footer={null}
+        zIndex={2000}
 
-      {/* Modal for Updating Subcategory */}
-      <Modal show={showModal} onHide={handleClose} centered size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Update Subcategory</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
+        destroyOnClose
+      >
           {selectedSubcategory && (
-            <Form>
-              <Form.Group className="mb-3">
-                <Form.Label>Subcategory Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={selectedSubcategory.name}
-                  onChange={(e) => setSelectedSubcategory({ ...selectedSubcategory, name: e.target.value })}
-                />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label>Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  value={selectedSubcategory.description}
-                  onChange={(e) => setSelectedSubcategory({ ...selectedSubcategory, description: e.target.value })}
-                />
-              </Form.Group>
-              {/* Select Parent Category Field */}
-              <Form.Group className="mb-3">
-                <Form.Label>Select Parent Category</Form.Label>
-                <Form.Control
-                  as="select"
-                  name="category_id"
-                  value={selectedSubcategory.category_id || ""}
-                  onChange={(e) => setSelectedSubcategory({ ...selectedSubcategory, category_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Select Category --</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </Form.Control>
-              </Form.Group>
-              
-              <Form.Group className="mb-3">
-                <Form.Label>Subcategory Logo</Form.Label>
-                <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
-                {previewImage && (
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={values => handleEditSave(values, editFileList[0]?.originFileObj)}
+            initialValues={{
+              name: selectedSubcategory.name,
+              description: selectedSubcategory.description,
+              category_id: selectedSubcategory.category_id,
+              status: selectedSubcategory.status === 1,
+            }}
+          >
+            <Form.Item label="Subcategory Name" name="name" rules={[{ required: true, message: 'Please enter subcategory name' }]}> 
+              <Input />
+            </Form.Item>
+            <Form.Item label="Description" name="description">
+              <Input.TextArea rows={3} />
+            </Form.Item>
+            <Form.Item label="Parent Category" name="category_id" rules={[{ required: true, message: 'Please select a parent category' }]}> 
+              <Select
+                placeholder="Select Category"
+                showSearch
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+              >
+                {categories.map(cat => (
+                  <Option key={cat.id} value={cat.id}>{cat.name}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item label="Subcategory Logo">
+              <Upload.Dragger
+                name="file"
+                accept="image/*"
+                multiple={false}
+                showUploadList={false}
+                beforeUpload={() => false}
+                onChange={handleEditLogoChange}
+                fileList={editFileList}
+              >
+                <p className="ant-upload-drag-icon">Drag & Drop or Click to Upload</p>
+                <p className="ant-upload-text">Click or drag image to this area to upload</p>
+              </Upload.Dragger>
+              {editPreview && (
                   <div className="mt-2">
-                    <img src={previewImage} alt="Subcategory Preview" className="img-thumbnail" width="120" />
+                  <img src={editPreview} alt="Subcategory Preview" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }} />
                   </div>
                 )}
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label>Status</Form.Label>
-                <Form.Select
-                  value={selectedSubcategory.status}
-                  onChange={(e) => setSelectedSubcategory({ ...selectedSubcategory, status: Number(e.target.value) })}
-                >
-                  <option value={1}>Active</option>
-                  <option value={0}>Inactive</option>
-                </Form.Select>
-              </Form.Group>
+            </Form.Item>
+            <Form.Item label="Status" name="status" valuePropName="checked">
+              <Switch
+                checkedChildren="Active"
+                unCheckedChildren="Inactive"
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button onClick={closeEditModal} style={{ marginRight: 8 }}>
+                Cancel
+              </Button>
+              <Button type="primary" htmlType="submit" loading={formLoading}>
+                Save Changes
+              </Button>
+            </Form.Item>
             </Form>
           )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleSave}>Save Changes</Button>
-        </Modal.Footer>
           </Modal>
-            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-              <Modal.Header closeButton>
-                <Modal.Title>Confirm Deletion</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>Are you sure you want to delete this category?</Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="danger" onClick={confirmDelete}>
-                  Yes, Delete
-                </Button>
-              </Modal.Footer>
+      {/* Delete Modal */}
+      <Modal
+        open={deleteModal}
+        onCancel={closeDeleteModal}
+        title="Confirm Deletion"
+        onOk={handleDelete}
+        okText="Yes, Delete"
+        cancelText="Cancel"
+        confirmLoading={deleteLoading}
+        zIndex={2000}
+
+      >
+        Are you sure you want to delete this subcategory?
             </Modal>
-    </Container>
+      {/* Error display */}
+      {error && <div style={{ color: 'red', marginTop: 16 }}>{error}</div>}
+    </div>
   );
 };
 
-export default SubcategoryList;
+export default AllSubCategory;

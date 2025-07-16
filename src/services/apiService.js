@@ -1,4 +1,5 @@
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
@@ -195,6 +196,27 @@ export const deleteBanner = async (bannerId) => {
       throw err;
     }
   };
+  export const updateCategory = async (selectedCategory) => {
+    try {
+      const formData = new FormData();
+      formData.append("id", selectedCategory.id);
+      formData.append("name", selectedCategory.name);
+      formData.append("description", selectedCategory.description);
+      formData.append("status", selectedCategory.status);
+
+      if (selectedCategory.category_logo instanceof File) {
+        formData.append("category_logo", selectedCategory.category_logo); // New image
+      } else if (selectedCategory.category_logo) {
+        formData.append("existing_category_logo", selectedCategory.category_logo); // Retain existing image
+      }
+
+      const response = await axios.put(`${API_URL}/category/categories`, formData, configwithform);
+      return { success: true, data: response.data.category };
+    } catch (err) {
+      console.error("Update failed:", err.response?.data || err.message);
+      return { success: false, error: err.response?.data || err.message };
+    }
+  };
   export const getAllUnverifiedUsers = async () => {
     try {
         const response = await axios.get(`${API_URL}/users/unverifiedUsers`, config); // ✅ Pass directly
@@ -205,11 +227,11 @@ export const deleteBanner = async (bannerId) => {
     }
 };
 
-export const verifyUser = async (id) => {
+export const verifyUser = async (userId,verification_status) => {
     try {
       const response = await axios.put(
-        `${API_URL}/users//verify-user`, 
-        { id },
+        `${API_URL}/users/verify-user`, 
+        { userId,verification_status },
         config
       );
       console.log(response.data)
@@ -275,3 +297,73 @@ export const deleteDiscount = async (discount_id) => {
       return { success: false, error: err.response?.data || err.message };
     }
   };
+
+export const updateSubCategory = async (formData) => {
+  try {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "multipart/form-data",
+      },
+    };
+    const response = await axios.put(`${API_URL}/subcategory/subcategories`, formData, config);
+    return { success: true, data: response.data.subcategories };
+  } catch (err) {
+    return { success: false, error: err.response?.data || err.message };
+  }
+};
+
+export const deleteSubCategory = async (subcategoryId) => {
+  try {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: { Authorization: token ? `Bearer ${token}` : "" },
+      data: { id: subcategoryId },
+    };
+    await axios.delete(`${API_URL}/subcategory/subcategories`, config);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.response?.data || err.message };
+  }
+};
+
+// Toggle subcategory status (only id and status as FormData)
+export const updateCategoryStatus = async (categoryId, status) => {
+  try {
+    const formData = new FormData();
+    formData.append('id', categoryId);
+    formData.append('status', status);
+    const response = await axios.put(`${API_URL}/category/categories`, formData, configwithform);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
+
+export const addProduct = async (formData) => {
+  try {
+  
+    const config = {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "multipart/form-data",
+      },
+    };
+    const response = await axios.post(`${API_URL}/products/products`, formData, config);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.log(error);
+    
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
+
+export const getAllVendors = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/vendors/getallvendorsforadmin/`);
+    return response.data;
+  } catch (error) {
+    return { success: false, message: error.message, data: [] };
+  }
+};

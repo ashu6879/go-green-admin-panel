@@ -1,120 +1,126 @@
-import React, { useState, useEffect } from 'react';
-
-// react-bootstrap
-import { ListGroup, Row, Col, Button, Dropdown } from 'react-bootstrap';
-
-// third party
+import React from 'react';
+import { Row, Col } from 'react-bootstrap';
+import { Breadcrumb as AntBreadcrumb, Typography } from 'antd';
+import { HomeOutlined } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
-import FeatherIcon from 'feather-icons-react';
-
-// project imports
-import navigation from 'menu-items';
 import { BASE_TITLE } from 'config/constant';
 
-// -----------------------|| BREADCRUMB ||-----------------------//
+const { Title } = Typography;
 
-export default function Breadcrumb() {
-  const [main, setMain] = useState({});
-  const [item, setItem] = useState({});
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  // @ts-ignore
+export default function ModernBreadcrumb() {
   const location = useLocation();
+  const { pathname } = location;
 
-  useEffect(() => {
-    navigation.items.map((item) => {
-      if (item.type && item.type === 'group') {
-        getCollapse(item);
-      }
-      return false;
-    });
-  });
+  // Split the pathname and filter out empty segments
+  const pathSegments = pathname.split('/').filter(Boolean);
 
-  const getCollapse = (items) => {
-    if (items.children) {
-      items.children.filter((collapse) => {
-        if (collapse.type === 'collapse') {
-          getCollapse(collapse);
-        } else if (collapse.type && collapse.type === 'item') {
-          if (document.location.pathname === import.meta.env.VITE_APP_BASE_NAME + collapse.url) {
-            setMain(items);
-            setItem(collapse);
-          }
-        }
-        return false;
-      });
-    }
-  };
+  // Build breadcrumb items
+  const breadcrumbItems = [
+    {
+      title: (
+        <Link to="/dashboard" className="text-decoration-none text-muted">
+          <HomeOutlined className="me-1" />
+          Home
+        </Link>
+      ),
+      path: '/dashboard',
+    },
+    ...pathSegments.map((segment, idx) => {
+      // Build the path up to this segment
+      const url = '/' + pathSegments.slice(0, idx + 1).join('/');
+      // Capitalize segment for display
+      const display = segment.charAt(0).toUpperCase() + segment.slice(1);
+      return {
+        title: idx === pathSegments.length - 1 ? (
+          <span className="text-primary fw-medium">{display}</span>
+        ) : (
+          <Link to={url} className="text-decoration-none text-muted">{display}</Link>
+        ),
+        path: url,
+      };
+    })
+  ];
 
-  let mainContent;
-  let itemContent;
-  let breadcrumbContent;
-  let title = '';
-  if (main && main.type === 'collapse') {
-    mainContent = (
-      <ListGroup.Item as="li" bsPrefix=" " className="breadcrumb-item">
-        <Link to="#">{main.title}</Link>
-      </ListGroup.Item>
-    );
-  }
+  // Set document title to last segment or Home
+  const lastSegment = pathSegments[pathSegments.length - 1];
+  const title = lastSegment ? (lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1)) : 'Home';
+  document.title = title + BASE_TITLE;
 
-  if (item && item.type === 'item') {
-    title = item.title;
-    itemContent = (
-      <ListGroup.Item as="li" bsPrefix=" " className="breadcrumb-item">
-        <Link to="#">{title}</Link>
-      </ListGroup.Item>
-    );
-
-    if (item.breadcrumbs !== false) {
-      breadcrumbContent = (
-        <div className="page-header">
-          <div className="page-block">
-            <Row className="align-items-center">
-              <Col md={8}>
-                <div className="page-header-title">
-                  <h5 className="m-b-10">{title}</h5>
+  return (
+    <div className="page-header">
+      <div className="container-fluid">
+        <div className="page-block">
+          <Row className="align-items-center">
+            <Col className='p-0' md={12}>
+              <div className="page-header-content">
+                <div className="d-flex align-items-center mt-2">
+                  <Title level={3} className="mb-0 me-3 text-dark">
+                    {title}
+                  </Title>
                 </div>
-                <ListGroup as="ul" bsPrefix=" " className="breadcrumb">
-                  <ListGroup.Item as="li" bsPrefix=" " className="breadcrumb-item">
-                    <Link to="/">Home</Link>
-                  </ListGroup.Item>
-                  {/* {mainContent} */}
-                  {itemContent}
-                </ListGroup>
-              </Col>
-              {main.title === 'Layouts' && (
-                <Col md={4} className="text-md-end action_button">
-                  <Button variant="secondary" size="sm" className="rounded-pill">
-                    Action
-                  </Button>
-                  <div className="btn-group ms-2">
-                    <Dropdown>
-                      <Dropdown.Toggle variant="primary" size="sm" className="arrow-none rounded-pill">
-                        <FeatherIcon icon="plus" />
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu className="dropdown-menu-end">
-                        <Dropdown.Item as={Link} to="#">
-                          Action
-                        </Dropdown.Item>
-                        <Dropdown.Item as={Link} to="#">
-                          Another action
-                        </Dropdown.Item>
-                        <Dropdown.Item as={Link} to="#">
-                          Something else here
-                        </Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </div>
-                </Col>
-              )}
-            </Row>
-          </div>
+                <AntBreadcrumb
+                  items={breadcrumbItems}
+                  className="mb-0"
+                  separator=">"
+                  style={{ fontSize: '14px', color: '#6c757d' }}
+                />
+              </div>
+            </Col>
+          </Row>
         </div>
-      );
-    }
-
-    document.title = title + BASE_TITLE;
-  }
-
-  return <>{breadcrumbContent}</>;
+      </div>
+    </div>
+  );
 }
+
+// Enhanced styles (add to your CSS file)
+const breadcrumbStyles = `
+.page-header {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  backdrop-filter: blur(10px);
+}
+
+.page-header .ant-breadcrumb {
+  font-size: 13px;
+}
+
+.page-header .ant-breadcrumb-link {
+  transition: all 0.2s ease;
+}
+
+.page-header .ant-breadcrumb-link:hover {
+  color: #1890ff !important;
+}
+
+.page-header .btn {
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.page-header .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.page-header .dropdown-menu {
+  border-radius: 8px;
+  padding: 8px 0;
+}
+
+.page-header .dropdown-item {
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.page-header .dropdown-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(4px);
+}
+
+.page-header .badge {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+`;
+
+export { breadcrumbStyles };

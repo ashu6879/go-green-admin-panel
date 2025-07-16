@@ -40,11 +40,15 @@ export default function AdminLayout() {
       <SessionManager /> {/* Add SessionManager here */}
       <MobileHeader />
       <NavBar />
+
       <Navigation />
       <div className={containerClass.join(' ')}>
         <div className="pcoded-content">
           <>
-            <Breadcrumb />
+         <div className="d-block  d-sm-none ">
+  <Breadcrumb />
+</div>
+
             <Suspense fallback={<Loader />}>
               <Outlet />
             </Suspense>

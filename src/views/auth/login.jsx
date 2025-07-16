@@ -33,7 +33,7 @@ export default function SignIn1() {
         if(token){
           localStorage.setItem("token", data.token);
           const decoded = jwtDecode(token);
-          //console.log("logged in user:",decoded)
+          console.log("logged in user:",decoded)
           localStorage.setItem("role_id", decoded.role_id);
           localStorage.setItem("role", decoded.role);
           localStorage.setItem("username", decoded.username);

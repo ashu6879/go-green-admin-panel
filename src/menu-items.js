@@ -30,15 +30,15 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'group',
           children: [
-            {
-              id: 'add-banner',
-              title: 'Add Banners',
-              type: 'item',
-              url: '/add-banner',
-              classes: 'nav-item',
-              icon: 'material-icons-two-tone',
-              iconname: 'person_add'
-            },
+            // {
+            //   id: 'add-banner',
+            //   title: 'Add Banners',
+            //   type: 'item',
+            //   url: '/add-banner',
+            //   classes: 'nav-item',
+            //   icon: 'material-icons-two-tone',
+            //   iconname: 'person_add'
+            // },
             {
               id: 'all-banner',
               title: 'All Banners',
@@ -61,20 +61,20 @@ const menuItems = {
       children: [
         {
           id: 'manage-users',
-          title: 'Users',
+          title: 'Varification Requests',
           type: 'collapse',
           icon: 'material-icons-two-tone',
           iconname: 'group',
           children: [
-            {
-              id: 'add-user',
-              title: 'Add User',
-              type: 'item',
-              url: '/add-users',
-              classes: 'nav-item',
-              icon: 'material-icons-two-tone',
-              iconname: 'person_add'
-            },
+            // {
+            //   id: 'add-user',
+            //   title: 'Add User',
+            //   type: 'item',
+            //   url: '/add-users',
+            //   classes: 'nav-item',
+            //   icon: 'material-icons-two-tone',
+            //   iconname: 'person_add'
+            // },
             {
               id: 'all-users',
               title: 'All Users',
@@ -85,10 +85,19 @@ const menuItems = {
               iconname: 'people_alt'
             },
             {
-              id: 'unverified-users',
-              title: 'All Unverified Users',
+              id: 'unverified-vendors',
+              title: 'All Unverified Vendors',
               type: 'item',
-              url: '/all-unverified-users',
+              url: '/all-unverified-vendors',
+              classes: 'nav-item',
+              icon: 'material-icons-two-tone',
+              iconname: 'people_alt'
+            },
+            {
+              id: 'unverified-partners',
+              title: 'All Unverified Riders',
+              type: 'item',
+              url: '/all-unverified-rider',
               classes: 'nav-item',
               icon: 'material-icons-two-tone',
               iconname: 'people_alt'
@@ -98,42 +107,50 @@ const menuItems = {
       ]
     },
 
-    // Products Group
+
+
     {
-      id: 'products-group',
+      id: 'vendortype-group',
+      type: 'group',
+      icon: 'icon-navigation',
+      children: [
+        {
+          id: 'vendortype',
+          title: 'Vendor Types',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'home',
+          url: '/vendor-type/'
+        }
+      ]
+    },
+     // Brands Group
+     {
+      id: 'brands-group',
       type: 'group',
       icon: 'icon-support',
       children: [
         {
-          id: 'manage-products',
-          title: 'Products',
+          id: 'product-brands',
+          title: 'Brands',
           type: 'collapse',
           icon: 'material-icons-two-tone',
-          iconname: 'add_shopping_cart',
+          iconname: 'history_edu',
           children: [
             {
-              id: 'add-product',
-              title: 'Add Product',
+              id: 'add-product-brand',
+              title: 'Add Product Brand',
               type: 'item',
-              url: '/add-products',
+              url: '/add-product-brand',
               classes: 'nav-item',
               icon: 'material-icons-two-tone',
               iconname: 'person_add'
             },
             {
-              id: 'all-products',
-              title: 'All Products',
+              id: 'all-product-brands',
+              title: 'All Product Brands',
               type: 'item',
-              url: '/all-products',
-              classes: 'nav-item',
-              icon: 'material-icons-two-tone',
-              iconname: 'people_alt'
-            },
-            {
-              id: 'product-discount',
-              title: 'Products Discount',
-              type: 'item',
-              url: '/products-discount',
+              url: '/all-product-brands',
               classes: 'nav-item',
               icon: 'material-icons-two-tone',
               iconname: 'people_alt'
@@ -142,6 +159,7 @@ const menuItems = {
         }
       ]
     },
+
 
     // Categories Group
     {
@@ -206,33 +224,42 @@ const menuItems = {
       ]
     },
 
-    // Brands Group
-    {
-      id: 'brands-group',
+     // Products Group
+     {
+      id: 'products-group',
       type: 'group',
       icon: 'icon-support',
       children: [
         {
-          id: 'product-brands',
-          title: 'Product Brands',
+          id: 'manage-products',
+          title: 'Products',
           type: 'collapse',
           icon: 'material-icons-two-tone',
-          iconname: 'history_edu',
+          iconname: 'add_shopping_cart',
           children: [
             {
-              id: 'add-product-brand',
-              title: 'Add Product Brand',
+              id: 'add-product',
+              title: 'Add Product',
               type: 'item',
-              url: '/add-product-brand',
+              url: '/add-products',
               classes: 'nav-item',
               icon: 'material-icons-two-tone',
               iconname: 'person_add'
             },
             {
-              id: 'all-product-brands',
-              title: 'All Product Brands',
+              id: 'all-products',
+              title: 'All Products',
               type: 'item',
-              url: '/all-product-brands',
+              url: '/all-products',
+              classes: 'nav-item',
+              icon: 'material-icons-two-tone',
+              iconname: 'people_alt'
+            },
+            {
+              id: 'product-discount',
+              title: 'Products Discount',
+              type: 'item',
+              url: '/products-discount',
               classes: 'nav-item',
               icon: 'material-icons-two-tone',
               iconname: 'people_alt'
@@ -241,6 +268,68 @@ const menuItems = {
         }
       ]
     },
+     // order Group
+     {
+      id: 'orders-group',
+      type: 'group',
+      icon: 'icon-support',
+      children: [
+        {
+          id: 'manage-orders',
+          title: 'Orders',
+          type: 'collapse',
+          icon: 'material-icons-two-tone',
+          iconname: 'add_shopping_cart',
+          children: [
+         
+            {
+              id: 'all-orders',
+              title: 'All Orders',
+              type: 'item',
+              url: '/all-orders',
+              classes: 'nav-item',
+              icon: 'material-icons-two-tone',
+              iconname: 'people_alt'
+            },
+           
+          ]
+        }
+      ]
+    },
+     // vendor Group
+     {
+      id: 'vendor-group',
+      type: 'group',
+      icon: 'icon-support',
+      children: [
+        {
+          id: 'manage-vendor',
+          title: 'Orders',
+          type: 'collapse',
+          icon: 'material-icons-two-tone',
+          iconname: 'add_shopping_cart',
+          children: [
+         
+            {
+              id: 'all-vendors',
+              title: 'All Vendors',
+              type: 'item',
+              url: '/vendors/all',
+              classes: 'nav-item',
+              icon: 'material-icons-two-tone',
+              iconname: 'people_alt'
+            },
+           
+          ]
+        }
+      ]
+    },
+
+
+
+
+  
+
     {
       id: 'category-div-data',
       type: 'group',

@@ -1,0 +1,292 @@
+.ant-modal .ant-modal-footer{
+    margin-top:0;
+    }
+      .user-preview-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e8e8e8;
+        overflow: hidden;
+      //   margin-bottom: 24px;
+      //   height:70vh;
+      //   overflow: auto;
+        position:relative;
+      }
+
+      .header-section {
+background: linear-gradient(135deg, #22aa66 0%, #229955 100%);
+        color: white;
+        padding: 20px;
+      //   position:fixed;
+      //   width:850px;
+            border-radius: 12px;
+      }
+
+      .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .profile-avatar {
+        position: relative;
+      }
+
+      .avatar-image {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .avatar-placeholder {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        color: #666;
+      }
+
+      .online-indicator {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        background: #52c41a;
+        border-radius: 50%;
+        border: 2px solid white;
+        bottom: 0;
+        right: 0;
+      }
+
+      .profile-info h2 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .profile-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .profile-location {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0.9;
+        font-size: 14px;
+      }
+
+      .store-banner {
+        background: rgba(24, 144, 255, 0.1);
+        border-bottom: 1px solid #e8e8e8;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .store-icon {
+        color: #1890ff;
+        font-size: 20px;
+      }
+
+      .store-info h5 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .store-address {
+        margin: 0;
+        color: #666;
+        font-size: 13px;
+      }
+
+      .content-section {
+        padding: 24px 20px;
+                  overflow: auto;
+                  height:50vh
+
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .section-header i {
+        color: #1890ff;
+        font-size: 20px;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .info-card {
+        background: #fafafa;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 16px;
+        transition: all 0.2s ease;
+      }
+
+      .info-card:hover {
+        border-color: #229955;
+        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+      }
+
+      .info-card-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .info-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(24, 144, 255, 0.1);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .info-icon i {
+        color: #1890ff;
+        font-size: 16px;
+      }
+
+      .info-text {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .info-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .info-value {
+        font-size: 14px;
+        color: #666;
+        word-break: break-word;
+        line-height: 1.4;
+      }
+
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+      }
+
+      .image-card {
+        background: #fafafa;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+      }
+
+      .image-card:hover {
+        border-color: #52c41a;
+        box-shadow: 0 2px 8px rgba(82, 196, 26, 0.1);
+      }
+
+      .image-card-header {
+        padding: 12px 16px;
+        background: rgba(82, 196, 26, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .image-card-header i {
+        color: #52c41a;
+        font-size: 16px;
+      }
+
+      .image-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #333;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .image-container {
+        padding: 16px;
+      }
+
+      .preview-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #e8e8e8;
+        transition: transform 0.2s ease;
+      }
+
+      .preview-image:hover {
+        transform: scale(1.02);
+      }
+
+      .section-divider {
+        margin-bottom: 32px;
+      }
+
+      .section-divider:last-child {
+        margin-bottom: 0;
+      }
+
+      @media (max-width: 768px) {
+      //  .user-preview-container {
+      //  height:80vh}
+
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .image-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .profile-header {
+          // flex-direction: column;
+          text-align: center;
+        }
+        
+        .content-section {
+          padding: 20px 16px;
+          // height:60vh
+        }
+        
+        .header-section {
+          padding: 16px;
+        }
+      }

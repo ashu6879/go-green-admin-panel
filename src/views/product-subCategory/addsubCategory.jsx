@@ -1,216 +1,199 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, Form, Button, InputGroup, Row, Col, Container, Modal } from "react-bootstrap";
-import FeatherIcon from "feather-icons-react";
+import React, { useState, useEffect } from "react";
+import { Card, Form, Input, Button, Select, Upload, Modal } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { getAllCategories } from "../../services/apiService";
 
-const AddCategory = () => {
-    const API_URL = import.meta.env.VITE_API_URL;
-    const fileInputRef = useRef(null);
+const { Dragger } = Upload;
+const { Option } = Select;
 
-    const [formData, setFormData] = useState({
-        name: "",
-        description: "",
-        category_id: "", // Stores selected category ID
-        subcategory_logo: null,
-    });
+const AddSubCategory = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
+  const [form] = Form.useForm();
+  const [categories, setCategories] = useState([]);
+  const [file, setFile] = useState(null);
+  const [fileList, setFileList] = useState([]);
+  const [preview, setPreview] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-    const [categories, setCategories] = useState([]); // Stores categories from API
-    const [preview, setPreview] = useState(null);
-    const [error, setError] = useState("");
-    const [showModal, setShowModal] = useState(false);
-
-    // Fetch categories on component mount
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await getAllCategories(); // Using API service
-                if (response.success) {
-                    setCategories(response.data); // ✅ Sets array if successful
-                } else {
-                    console.error("Failed to fetch categories:", response.error);
-                }
-            } catch (err) {
-                console.error("Error fetching categories:", err);
-            }
-        };
-    fetchCategories();
-    }, []);
-
-    const handleChange = (e) => {
-        const { name, value, type, files } = e.target;
-        if (type === "file") {
-            const file = files[0];
-            if (file) {
-                setFormData({ ...formData, subcategory_logo: file }); // ✅ Updated field
-                setPreview(URL.createObjectURL(file));
-            }
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getAllCategories();
+        if (response.success) {
+          setCategories(response.data);
         } else {
-            setFormData({ ...formData, [name]: value });
+          setError("Failed to fetch categories");
         }
+      } catch (err) {
+        setError("Error fetching categories");
+      }
     };
-    
+    fetchCategories();
+  }, []);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const formDataToSend = new FormData();
-    
-        // ✅ Append text fields
-        formDataToSend.append("name", formData.name);
-        formDataToSend.append("description", formData.description);
-        formDataToSend.append("category_id", formData.category_id); // ✅ Sending category ID
-    
-        // ✅ Append file as `subcategory_logo`
-        if (formData.subcategory_logo) {
-            formDataToSend.append("subcategory_logo", formData.subcategory_logo);
-        }
-    
-        try {
-            const token = localStorage.getItem("token");
-            const config = {
-                headers: {
-                    Authorization: token ? `Bearer ${token}` : "",
-                    "Content-Type": "multipart/form-data",
-                },
-            };
-    
-            await axios.post(`${API_URL}/subcategories`, formDataToSend, config);
-    
-            // ✅ Show success modal
-            setShowModal(true);
-    
-            // ✅ Reset form fields & preview
-            setFormData({
-                name: "",
-                description: "",
-                category_id: "",
-                subcategory_logo: null,
-            });
-            setPreview(null);
-    
-            // ✅ Clear file input manually
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
-    
-        } catch (err) {
-            setError("Failed to add sub-category. Please try again.");
-        }
-    };
-    
+  const handleLogoChange = info => {
+    setError("");
+    let newFileList = info.fileList.slice(-1); // Only keep the latest file
+    setFileList(newFileList);
+    const fileObj = newFileList[0]?.originFileObj;
+    if (info.file.status === "removed" || !fileObj) {
+      setFile(null);
+      setPreview(null);
+      return;
+    }
+    // Validate file type and size
+    const isImage = fileObj.type.startsWith("image/");
+    const isLt2M = fileObj.size / 1024 / 1024 < 2;
+    if (!isImage) {
+      setError("You can only upload image files!");
+      setFileList([]);
+      return;
+    }
+    if (!isLt2M) {
+      setError("Image must be smaller than 2MB!");
+      setFileList([]);
+      return;
+    }
+    setFile(fileObj);
+    setPreview(URL.createObjectURL(fileObj));
+  };
 
-    return (
-        <Container fluid className="p-4">
-            <Card className="borderless w-100">
-                <Card.Body>
-                    <h4 className="mb-3 f-w-400 text-center">Add Sub-Category</h4>
-                    {error && <p className="text-danger text-center">{error}</p>}
+  const handleFinish = async values => {
+    setError("");
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("description", values.description);
+      formData.append("category_id", values.category_id);
+      if (file) {
+        formData.append("subcategory_logo", file);
+      }
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+          "Content-Type": "multipart/form-data",
+        },
+      };
+      await axios.post(`${API_URL}/subcategories`, formData, config);
+      setShowModal(true);
+      form.resetFields();
+      setFile(null);
+      setPreview(null);
+      setFileList([]);
+    } catch (err) {
+      setError("Failed to add sub-category. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    <Form onSubmit={handleSubmit} autoComplete="off">
-                        <Row>
-                            {/* Left Column - Name & Logo */}
-                            <Col md={6} className="mb-3">
-                                {/* Category Name */}
-                                <Form.Label>Sub-Category Name</Form.Label>
-                                <InputGroup className="mb-3">
-                                    <InputGroup.Text>
-                                        <FeatherIcon icon="tag" />
-                                    </InputGroup.Text>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Sub-Category Name"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </InputGroup>
+  return (
+    <div style={{ maxWidth: 650, margin: "40px auto" }}>
+      <Card title="Add Sub-Category" bordered={false}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleFinish}
+          autoComplete="off"
+        >
+          <Form.Item
+            label="Sub-Category Name"
+            name="name"
+            rules={[{ required: true, message: "Please enter sub-category name" }]}
+          >
+            <Input placeholder="Sub-Category Name" />
+          </Form.Item>
 
-                                {/* Select Category */}
-                                <Form.Label>Select Parent Category</Form.Label>
-                                <Form.Control
-                                    as="select"
-                                    name="category_id"
-                                    value={formData.category_id}
-                                    onChange={handleChange}
-                                    required
-                                >
-                                    <option value="">-- Select Category --</option>
-                                    {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </Form.Control>
+          <Form.Item
+            label="Parent Category"
+            name="category_id"
+            rules={[{ required: true, message: "Please select a parent category" }]}
+          >
+            <Select
+              placeholder="-- Select Category --"
+              showSearch
+              filterOption={(input, option) =>
+                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+            >
+              {categories.map(category => (
+                <Option key={category.id} value={category.id}>
+                  {category.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
 
-                                {/* Upload Logo */}
-                                <Form.Label>Upload Logo</Form.Label>
-                                <Form.Control
-                                    type="file"
-                                    accept="image/*"
-                                    name="subcategory_logo"  // ✅ Updated name
-                                    onChange={handleChange}
-                                    ref={fileInputRef}
-                                    required
-                                />
+          <Form.Item
+            label="Sub-Category Description"
+            name="description"
+            rules={[{ required: true, message: "Please enter sub-category description" }]}
+          >
+            <Input.TextArea rows={5} placeholder="Enter sub-category description..." />
+          </Form.Item>
 
-                                {/* Logo Preview */}
-                                {preview && (
-                                    <div className="mt-3">
-                                        <p>Logo Preview:</p>
-                                        <img
-                                            src={preview}
-                                            alt="Logo Preview"
-                                            className="img-fluid"
-                                            style={{ maxWidth: "60px", maxHeight: "60px", borderRadius: "5px" }}
-                                        />
-                                    </div>
-                                )}
-                            </Col>
+          <Form.Item
+            label="Sub-Category Logo"
+            required
+            rules={[{ required: true, message: "Please upload a logo" }]}
+          >
+            <Dragger
+              name="subcategory_logo"
+              accept="image/*"
+              multiple={false}
+              showUploadList={false}
+              beforeUpload={() => false}
+              onChange={handleLogoChange}
+              customRequest={() => {}}
+              fileList={fileList}
+            >
+              <p className="ant-upload-drag-icon">
+                <PlusOutlined style={{ fontSize: 32 }} />
+              </p>
+              <p className="ant-upload-text">Click or drag image to this area to upload</p>
+              <p className="ant-upload-hint">(Only image files, max 2MB)</p>
+            </Dragger>
+            {preview && (
+              <div style={{ marginTop: 12 }}>
+                <img
+                  src={preview}
+                  alt="Logo Preview"
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #eee" }}
+                />
+              </div>
+            )}
+          </Form.Item>
 
-                            {/* Right Column - Description */}
-                            <Col md={6} className="mb-3">
-                                <Form.Label>Sub-Category Description</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    rows={9}
-                                    placeholder="Enter sub-category description..."
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </Col>
-                        </Row>
+          {error && <div style={{ color: "red", marginBottom: 12 }}>{error}</div>}
 
-                        {/* Submit Button */}
-                        <Row>
-                            <Col md={12} className="text-center">
-                                <Button type="submit" className="btn btn-primary w-50">
-                                    Add Sub-Category
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Form>
-                </Card.Body>
-            </Card>
-
-            {/* Success Modal */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Sub-Category Created Successfully</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>The sub-category has been added successfully!</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="success" onClick={() => setShowModal(false)}>
-                        OK
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
-    );
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block>
+              Add Sub-Category
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
+      <Modal
+        open={showModal}
+        onCancel={() => setShowModal(false)}
+        footer={null}
+        centered
+      >
+        <div style={{ textAlign: "center" }}>
+          <h3>Sub-Category Created Successfully</h3>
+          <p>The sub-category has been added successfully!</p>
+          <Button type="primary" onClick={() => setShowModal(false)}>
+            OK
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
 };
 
-export default AddCategory;
+export default AddSubCategory;

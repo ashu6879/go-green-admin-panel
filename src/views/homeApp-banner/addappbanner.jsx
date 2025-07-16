@@ -1,171 +1,122 @@
-import React, { useState, useRef } from "react";
-import { Card, Form, Button, InputGroup, Row, Col, Container, Modal } from "react-bootstrap";
-import FeatherIcon from "feather-icons-react";
+import React, { useState } from "react";
+import { Form, Input, Button, Switch, Upload, Modal, message } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { addBanner } from "../../services/apiService";
 
-const AddBanner = () => {
-    const bannerInputRef = useRef(null); // ✅ File input reference for banner image
+const { Dragger } = Upload;
 
-    const [formData, setFormData] = useState({
-        title: "",
-        status: "",
-        banner_image: null,
-    });
+const AddBanner = ({ onSuccess, onCancel,fetchBanners }) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [file, setFile] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-    const [bannerPreview, setBannerPreview] = useState(null);
-    const [error, setError] = useState("");
-    const [showModal, setShowModal] = useState(false);
+  const handleFinish = async (values) => {
+    if (!file) {
+      message.error("Please upload a banner image.");
+      return;
+    }
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("title", values.title);
+    formData.append("status", values.status ? 1 : 0);
+    formData.append("banner_image", file);
+    try {
+      const result = await addBanner(formData);
+      if (result.success) {
 
-    const handleChange = (e) => {
-        const { name, type, value, files } = e.target;
-        if (type === "file") {
-            const file = files[0];
-            if (file) {
-                setFormData({ ...formData, banner_image: file });
-                setBannerPreview(URL.createObjectURL(file));
-            }
-        } else {
-            setFormData({ ...formData, [name]: value });
-        }
-    };
+        setShowSuccess(true);
+        form.resetFields();
+        setPreviewImage(null);
+        setFile(null);
+        if (onSuccess) onSuccess();
+      } else {
+        message.error(result.error?.message || "Failed to add banner.");
+      }
+    } catch (err) {
+      message.error("Failed to add banner. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const formDataToSend = new FormData();
+  const handleImageChange = (file) => {
+    setFile(file);
+    setPreviewImage(URL.createObjectURL(file));
+  };
 
-        // ✅ Append fields
-        formDataToSend.append("title", formData.title);
-        formDataToSend.append("status", formData.status);
-
-        // ✅ Append banner image if exists
-        if (formData.banner_image) {
-            formDataToSend.append("banner_image", formData.banner_image);
-        }
-
-        try {
-            const result = await addBanner(formDataToSend);
-
-            if (result.success) {
-                setShowModal(true);
-
-                // ✅ Reset form
-                setFormData({
-                    title: "",
-                    status: "",
-                    banner_image: null,
-                });
-                setBannerPreview(null);
-
-                // ✅ Clear file input
-                if (bannerInputRef.current) {
-                    bannerInputRef.current.value = "";
-                }
-            } else {
-                setError(result.error?.message || "Failed to add banner.");
-            }
-        } catch (err) {
-            setError("Failed to add banner. Please try again.");
-        }
-    };
-
-    return (
-        <Container fluid className="p-4">
-            <Card className="borderless w-100">
-                <Card.Body>
-                    <h4 className="mb-3 f-w-400 text-center">Add Banner</h4>
-                    {error && <p className="text-danger text-center">{error}</p>}
-
-                    <Form onSubmit={handleSubmit} autoComplete="off">
-                        <Row>
-                            <Col md={6} className="mb-3">
-                                {/* Title */}
-                                <Form.Label>Title</Form.Label>
-                                <InputGroup className="mb-3">
-                                    <InputGroup.Text>
-                                        <FeatherIcon icon="tag" />
-                                    </InputGroup.Text>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Banner Title"
-                                        name="title"
-                                        value={formData.title}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </InputGroup>
-                            </Col>
-
-                            <Col md={6} className="mb-3">
-                                {/* Status */}
-                                <Form.Label>Status</Form.Label>
-                                <Form.Control
-                                    as="select"
-                                    name="status"
-                                    value={formData.status}
-                                    onChange={handleChange}
-                                    required
-                                >
-                                    <option value="">Select Status</option>
-                                    <option value={1}>Active</option>
-                                    <option value={0}>Inactive</option>
-                                </Form.Control>
-                            </Col>
-
-                            <Col md={12} className="mb-3">
-                                {/* Upload Banner */}
-                                <Form.Label>Upload Banner</Form.Label>
-                                <Form.Control
-                                    type="file"
-                                    accept="image/*"
-                                    name="banner_image"
-                                    onChange={handleChange}
-                                    ref={bannerInputRef}  // ✅ Attach ref to file input
-                                    required
-                                />
-
-                                {/* Banner Preview */}
-                                {bannerPreview && (
-                                    <div className="mt-3">
-                                        <p>Banner Preview:</p>
-                                        <img
-                                            src={bannerPreview}
-                                            alt="Banner Preview"
-                                            className="img-fluid"
-                                            style={{ maxWidth: "100%", maxHeight: "200px", borderRadius: "5px" }}
-                                        />
-                                    </div>
-                                )}
-                            </Col>
-                        </Row>
-
-                        {/* Submit Button */}
-                        <Row>
-                            <Col md={12} className="text-center">
-                                <Button type="submit" className="btn btn-primary w-50">
-                                    Add Banner
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Form>
-                </Card.Body>
-            </Card>
-
-            {/* Success Modal */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Banner Created Successfully</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>The banner has been added successfully!</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="success" onClick={() => setShowModal(false)}>
-                        OK
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
-    );
+  return (
+    <>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleFinish}
+        initialValues={{ status: true }}
+      >
+        <Form.Item
+          label="Banner Title"
+          name="title"
+          rules={[{ required: true, message: "Please enter a banner title" }]}
+        >
+          <Input placeholder="Banner Title" />
+        </Form.Item>
+        <Form.Item label="Banner Image" required>
+          <Dragger
+            name="file"
+            accept="image/*"
+            multiple={false}
+            showUploadList={false}
+            beforeUpload={(file) => {
+              const isImage = file.type.startsWith('image/');
+              if (!isImage) {
+                message.error('You can only upload image files!');
+                return Upload.LIST_IGNORE;
+              }
+              handleImageChange(file);
+              return false;
+            }}
+          >
+            <p className="ant-upload-drag-icon">
+              <PlusOutlined style={{ fontSize: 32 }} />
+            </p>
+            <p className="ant-upload-text">Click or drag image to this area to upload</p>
+            <p className="ant-upload-hint">Only image files are allowed.</p>
+            {previewImage && (
+              <div className="mt-2">
+                <img src={previewImage} alt="Banner Preview" className="img-thumbnail" width="120" />
+              </div>
+            )}
+          </Dragger>
+        </Form.Item>
+        <Form.Item label="Active" name="status" valuePropName="checked">
+          <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+        </Form.Item>
+        <div style={{ textAlign: 'right' }}>
+          <Button onClick={onCancel} style={{ marginRight: 8 }}>
+            Cancel
+          </Button>
+          <Button type="primary" htmlType="submit" loading={loading}>
+            Add Banner
+          </Button>
+        </div>
+      </Form>
+      <Modal
+        open={showSuccess}
+        onCancel={() => setShowSuccess(false)}
+        footer={null}
+        centered
+      >
+        <div style={{ textAlign: 'center' }}>
+          <h4>Banner Created Successfully</h4>
+          <p>The banner has been added successfully!</p>
+          <Button type="primary" onClick={() => { setShowSuccess(false); if (onSuccess) onSuccess(); }}>
+            OK
+          </Button>
+        </div>
+      </Modal>
+    </>
+  );
 };
 
 export default AddBanner;

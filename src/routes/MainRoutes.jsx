@@ -2,6 +2,9 @@ import { lazy } from 'react';
 
 import AdminLayout from 'layouts/AdminLayout';
 import GuestLayout from 'layouts/GuestLayout';
+import Orders from '../views/dashboard/ORDERS/Orders';
+import VendorTypeList from '../views/dashboard/VENDORS/vendorType/vendorTypeList';
+import VendorTable from '../views/dashboard/VENDORS/AllVendors/vendorTabel';
 
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
 
@@ -79,8 +82,12 @@ const MainRoutes = {
           element: <AllUser />
         },
         {
-          path: '/all-unverified-users',
-          element: <Unverifiedusers />
+          path: '/all-unverified-vendors',
+          element: <Unverifiedusers user={"vendors"} />
+        },
+        {
+          path: '/all-unverified-rider',
+          element: <Unverifiedusers user={"delivery_partners"}  />
         },
 
         {
@@ -132,15 +139,27 @@ const MainRoutes = {
           path: '/edit-category-data',
           element: <Editcategorydata />
         },
-
         {
-          path: '/add-banner',
-          element: <AddAppBanner />
+          path: '/all-orders',
+          element: <Orders />
         },
-        
+
+        // {
+        //   path: '/add-banner',
+        //   element: <AddAppBanner />
+        // },
         {
           path: '/all-banner',
           element: <AllAppBanner />
+        },
+        
+        {
+          path: '/vendor-type',
+          element: <VendorTypeList />
+        },
+        {
+          path: '/vendors/all',
+          element: <VendorTable />
         }
       ]
     },

@@ -4,6 +4,7 @@ import { useContext } from 'react';
 import NavLeft from './NavLeft';
 import NavRight from './NavRight';
 import { ConfigContext } from 'contexts/ConfigContext';
+import Breadcrumb from '../Breadcrumb';
 
 // -----------------------|| NAV BAR ||-----------------------//
 
@@ -24,7 +25,12 @@ export default function NavBar() {
   let navBar = (
     <>
       <div className="header-wrapper">
+
+    <div className="d-none d-sm-block w-100">
+  <Breadcrumb />
+</div>
         <div className={mobDrpClass.join(' ')}>
+
           <NavLeft />
         </div>
         <div className="ms-auto">

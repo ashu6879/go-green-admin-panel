@@ -1,226 +1,245 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Pencil, Trash } from "react-bootstrap-icons";
-import { Modal, Button, Form, Table, Container } from "react-bootstrap";
-import { getAllBanners, deleteBanner,updateBanner  } from "../../services/apiService";
+import React from "react";
+import { Table, Modal, Button, Form, Input, Select, Switch, Upload, message } from "antd";
+import {  Pencil, Trash, Plus } from "react-bootstrap-icons";
+import useBannerTable from "./bannerhook";
+import AddBanner from "./addappbanner";
+
+const { Option } = Select;
+const { Dragger } = Upload;
 
 const AllBanners = () => {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
-  const [banners, setBanners] = useState([]);
-  const [error, setError] = useState("");
-  const token = localStorage.getItem("token");
+  const {
+    banners,
+    loading,
+    error,
+    pagination,
+    show,
+    selectedBanner,
+    showDeleteModal,
+    formState,
+    previewImage,
+    onTableChange,
+    handleUpdate,
+    handleDelete,
+    handleClose,
+    handleCloseDeleteModal,
+    handleSave,
+    confirmDelete,
+    handleFormChange,
+    handleImageChange,
+    handleFeatureToggle,
+    handleTodayDealToggle,
+    handleStatusToggle, // <-- Add this handler in the hook
+    fetchBanners, // <-- Add this to refresh after add
+  } = useBannerTable();
 
-  const [show, setShow] = useState(false);
-  const [selectedBanner, setSelectedBanner] = useState(null);
-  const [previewImage, setPreviewImage] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedBannerId, setSelectedBannerId] = useState(null);
+  const [showAddModal, setShowAddModal] = React.useState(false);
+  const [search, setSearch] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
 
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const response = await getAllBanners();
-        if (response.success) {
-          setBanners(response.data);
-        } else {
-          console.error("Failed to fetch banners:", response.error);
-        }
-      } catch (err) {
-        console.error("Error fetching banners:", err);
-      }
-    };
+  // Debounce search
+  React.useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Handler to refresh banners after add
+  const handleAddSuccess = () => {
+    setShowAddModal(false);
     fetchBanners();
-  }, [banners]);
-
-  const handleDelete = (bannerId) => {
-    setSelectedBannerId(bannerId);
-    setShowDeleteModal(true);
-  };
-  const handleUpdate = (banner) => {
-    setSelectedBanner(banner);
-    setPreviewImage(banner.image_url ? `${IMAGE_BASE_URL}${banner.image_url}` : "");
-    setShow(true);
-  };
-  const handleClose = () => {
-    setShow(false);
-    setSelectedBanner(null);
-    setPreviewImage("");
   };
 
-  const confirmDelete = async () => {
-    if (selectedBannerId) {
-      try {
-          const response = await deleteBanner(selectedBannerId);
-          if (response.success) {
-            setBanners(banners.filter((banner) => banner.id !== selectedBannerId));
-            setShowDeleteModal(false);
-          } else {
-            setError(response.message);
-          }
-      } catch (err) {
-        setError("Failed to delete banner. Please try again.");
-      }
-    }
-  };
-  const handleSave = async () => {
-    try {
-      if (selectedBanner) {
-        const updatedData = await updateBanner(selectedBanner);
-        console.log("API Response:", updatedData); // Debugging
-  
-        if (updatedData.success) {
-          setBanners((prevBanners) =>
-            prevBanners.map((banner) =>
-              banner.id === selectedBanner.id ? { ...banner, ...updatedData.data } : banner
-            )
-          );
-          setShow(false);
-          setSelectedBanner(null);
-          setPreviewImage("");
-        } else {
-          console.error("Update failed:", updatedData);
-          setError("Failed to update Banner.");
-        }
-      }
-    } catch (err) {
-      console.error("Update error:", err);
-      setError("Failed to update Banner.");
-    }
-  };
-  
-  
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-      setSelectedBanner({ ...selectedBanner, image_url: file });
-    } else {
-      // Retain existing image if no new file is selected
-      setSelectedCategory({ ...selectedBanner, image_url: selectedBanner.image_url });
-    }
-  };
+  const BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
+
+  // Filter banners by title
+  const filteredBanners = React.useMemo(() => {
+    if (!debouncedSearch) return banners;
+    return banners.filter(b => b.title && b.title.toLowerCase().includes(debouncedSearch.toLowerCase()));
+  }, [banners, debouncedSearch]);
+
+  const columns = [
+    {
+      title: '#',
+      dataIndex: 'index',
+      key: 'index',
+      render: (text, record, index) => index + 1,
+      width: 50,
+    },
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+      render: (text) => <span style={{ fontWeight: 'bold' }}>{text}</span>,
+    },
+    {
+      title: 'Banner Image',
+      dataIndex: 'image_url',
+      key: 'image_url',
+      render: (img) =>
+        img ? (
+          <img
+            src={`${BASE_URL}${img}`}
+            alt="Banner"
+            style={{ width: 250, height: 100, objectFit: "contain" }}
+          />
+        ) : (
+          <span>No Image</span>
+        ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (val, record) => (
+        <Switch
+          checked={val === 1}
+          checkedChildren="Active"
+          unCheckedChildren="Inactive"
+          onChange={(checked) => handleStatusToggle(record, checked)}
+        />
+      ),
+      width: 120,
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <div className="d-flex align-items-center">
+          <Button
+            type="text"
+            icon={<Pencil className="text-primary" style={{  fontSize: 18 }} />}
+            onClick={() => handleUpdate(record)}
+            style={{ marginRight: 8 }}
+          />
+          <Button
+            type="text"
+            icon={<Trash style={{ color: '#ff4d4f', fontSize: 18 }} />}
+            onClick={() => handleDelete(record)}
+          />
+        </div>
+      ),
+      width: 100,
+    },
+  ];
 
   return (
-    <Container fluid className="mt-4">
-      <div className="table-responsive p-2 bg-white">
-        {banners.length === 0 ? (
-          <p style={{ color: "red", textAlign: "center", fontSize: "15px" }}>
-            No Banners Found
-          </p>
-        ) : (
-          <Table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Title</th>
-                <th>Banner Image</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {banners.map((banner, index) => (
-                <tr key={banner.id || index}>
-                  <td>{index + 1}</td>
-                  <td>{banner.title}</td>
-                  <td>
-                    {banner.image_url ? (
-                      <img
-                        src={`${IMAGE_BASE_URL}${banner.image_url}`}
-                        alt="Banner"
-                        style={{ width: "100px", height: "100px", maxWidth: "100px", maxHeight: "100px", objectFit: "contain" }}
-                      />
-                    ) : (
-                      <span>No Image</span>
-                    )}
-                  </td>
-                  <td>{banner.status === 1 ? "Active" : "Inactive"}</td>
-                  <td>
-                    <button
-                      className="btn btn-primary btn-sm me-2"
-                      onClick={() => handleUpdate(banner)}
-                    >
-                      <Pencil />
-                    </button>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleDelete(banner.id)}
-                    >
-                      <Trash />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
+    <div className="mt-4 col-md-6">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0">Banners</h5>
+        <Button type="primary" icon={<Plus />} onClick={() => setShowAddModal(true)}>
+          Add New
+        </Button>
       </div>
-        {/* Modal for Updating Category */}
-        <Modal show={show} onHide={handleClose} centered size="lg">
-          <Modal.Header closeButton>
-            <Modal.Title className="fw-bold text-primary">Update Category</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
+      <div className="mb-2">
+        <Input
+          placeholder="Search by title..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          allowClear
+          style={{ width: 250 }}
+        />
+      </div>
+      <div className="p-2 bg-white">
+        <Table
+          columns={columns}
+          dataSource={filteredBanners}
+          loading={loading}
+          pagination={pagination}
+          onChange={onTableChange}
+          rowKey={record => record.id || record._id}
+          scroll={{ x: 'max-content' }}
+          size="small" // Reduce row height
+          rowClassName={() => 'custom-row-small'} // Custom class for row height
+        />
+      </div>
+      {/* Add Banner Modal */}
+      <Modal
+        open={showAddModal}
+        onCancel={() => setShowAddModal(false)}
+        title="Add New Banner"
+        footer={null}
+        centered
+        width={600}
+      >
+        <AddBanner onSuccess={handleAddSuccess} onCancel={() => setShowAddModal(false)} />
+      </Modal>
+      {/* Update Modal */}
+      <Modal
+        open={show}
+        onCancel={handleClose}
+        title="Update Banner"
+        footer={null}
+        centered
+      >
             {selectedBanner && (
-              <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Banner Title</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={selectedBanner.title}
-                    onChange={(e) => setSelectedBanner({ ...selectedBanner, title: e.target.value })}
-                  />
-                </Form.Group>
-  
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Banner Image</Form.Label>
-                  <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
+          <Form layout="vertical">
+            <Form.Item label="Banner Title">
+              <Input
+                name="title"
+                value={formState.title}
+                onChange={handleFormChange}
+              />
+            </Form.Item>
+            <Form.Item label="Banner Image">
+              <Dragger
+                name="file"
+                accept="image/*"
+                multiple={false}
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  const isImage = file.type.startsWith('image/');
+                  if (!isImage) {
+                    message.error('You can only upload image files!');
+                    return Upload.LIST_IGNORE;
+                  }
+                  handleImageChange(file); // Use the hook's handler
+                  return false; // Prevent auto upload
+                }}
+              >
+                <p className="ant-upload-drag-icon">
+                  {/* <InboxOutlined style={{ fontSize: 32 }} /> */}
+                </p>
+                <p className="ant-upload-text">Click or drag image to this area to upload</p>
+                <p className="ant-upload-hint">Only image files are allowed.</p>
                   {previewImage && (
                     <div className="mt-2">
-                      <img src={previewImage} alt="Category Preview" className="img-thumbnail" width="120" />
+                    <img src={previewImage} alt="Banner Preview" className="img-thumbnail" width="120" />
                     </div>
                   )}
-                </Form.Group>
-  
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Status</Form.Label>
-                  <Form.Select
-                    value={selectedBanner.status}
-                    onChange={(e) => setSelectedBanner({ ...selectedBanner, status: Number(e.target.value) })}
-                  >
-                    <option value={1}>Active</option>
-                    <option value={0}>Inactive</option>
-                  </Form.Select>
-                </Form.Group>
-              </Form>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
+              </Dragger>
+            </Form.Item>
+            <Form.Item label="Active">
+              <Switch
+                checked={formState.status === 1}
+                checkedChildren="Active"
+                unCheckedChildren="Inactive"
+                onChange={checked => handleFormChange({ target: { name: 'status', value: checked ? 1 : 0 } })}
+              />
+            </Form.Item>
+            <div style={{ textAlign: 'right' }}>
+              <Button onClick={handleClose} style={{ marginRight: 8 }}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleSave}>
+              <Button type="primary" onClick={handleSave}>
               Save Changes
             </Button>
-          </Modal.Footer>
+            </div>
+          </Form>
+        )}
         </Modal>
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this banner?</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            Yes, Delete
-          </Button>
-        </Modal.Footer>
+      {/* Delete Modal */}
+      <Modal
+        open={showDeleteModal}
+        onCancel={handleCloseDeleteModal}
+        title="Confirm Deletion"
+        onOk={confirmDelete}
+        okText="Yes, Delete"
+        cancelText="Cancel"
+        centered
+      >
+        Are you sure you want to delete this banner?
       </Modal>
-    </Container>
+    </div>
   );
 };
 
