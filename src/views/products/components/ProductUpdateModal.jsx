@@ -22,6 +22,7 @@ const ProductUpdateModal = ({
   subCategories,
   loading
 }) => {
+  console.log(formState);
   return (
     <Modal
       open={open}
@@ -127,6 +128,7 @@ const ProductUpdateModal = ({
                 </Form.Item>
                 <Divider orientation="left">Product Images</Divider>
                 <Form.Item label="Product Image">
+                
                   <Dragger
                     name="file"
                     accept="image/*"
@@ -138,47 +140,71 @@ const ProductUpdateModal = ({
                     }}
                   >
                     <p className="ant-upload-drag-icon">Drag & Drop or Click to Upload</p>
-                    {previewImage || formState.featured_image ? (
-                      <div className="mt-2 position-relative d-inline-block">
-                        <img src={previewImage || BASE_URL+formState.featured_image} alt="Product Preview" className="img-thumbnail" width="80" height="80" />
-                        <Button type="text" className="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle" style={{ fontSize: "10px", lineHeight: "1"}} onClick={handleDeleteFeaturedImage}>✖</Button>
-                      </div>
-                    ) : null}
                   </Dragger>
+                  {(previewImage || formState.featured_image) && (
+                    <div className="mb-2 mt-2 position-relative d-inline-block">
+                      <img src={previewImage || BASE_URL+formState.featured_image} alt="Product Preview" className="img-thumbnail" width="60" height="60" style={{objectFit:'cover'}} />
+                      <Button
+                        type="text"
+                        style={{ position: 'absolute', top: -5, right: -5, background: '#ff4d4f', color: 'white', borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', border: 'none', zIndex: 1, padding: 0 }}
+                        onClick={handleDeleteFeaturedImage}
+                      >×</Button>
+                    </div>
+                  )}
+
                 </Form.Item>
-                <Form.Item label="Gallery Images">
+                <Form.Item label={`Gallery Images (${(formState.gallery_images || []).length}/5)`} required>
                   <Dragger
                     name="gallery"
                     accept="image/*"
                     multiple={true}
                     showUploadList={false}
+                    disabled={(formState.gallery_images || []).length >= 5}
                     beforeUpload={(file) => {
+                      if ((formState.gallery_images || []).length >= 5) {
+                        return false;
+                      }
                       handleGalleryImagesChange({ target: { files: [file] } });
                       return false;
                     }}
                   >
                     <p className="ant-upload-drag-icon">Drag & Drop or Click to Upload Gallery Images</p>
-                    <div className="mt-2 d-flex flex-wrap">
-                      {(formState.gallery_images || []).map((img, index) => {
-                        let imageUrl = '';
-                        // console.log(img);
-                        
-                        if (img instanceof File) {
-                          imageUrl = previewImages[index];
-                        } else if (typeof img === 'string') {
-                          imageUrl = img;
-                        } else if (img && img.image_path) {
-                          imageUrl = BASE_URL+img.image_path;
-                        }
-                        return (
-                          <div key={index} className="position-relative m-1">
-                            <img src={imageUrl} alt={`Gallery Preview ${index + 1}`} className="img-thumbnail" width="80" height="80" />
-                            <Button type="text" className="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle" style={{ fontSize: "10px", lineHeight: "1"}} onClick={() => handleDeleteGalleryImage(index)}>✖</Button>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <p className="ant-upload-text">
+                      {(formState.gallery_images || []).length >= 5
+                        ? 'Maximum 5 images reached.'
+                        : 'Click or drag images to upload'}
+                    </p>
+                    <p className="ant-upload-hint">
+                      {(formState.gallery_images || []).length >= 5
+                        ? 'Remove images to enable upload'
+                        : 'Max 5 images, 5MB each'}
+                    </p>
                   </Dragger>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: 60, marginTop: 8 }}>
+                    {(formState.gallery_images || []).map((img, index) => {
+                      let imageUrl = '';
+                      if (img instanceof File) {
+                        imageUrl = previewImages[index];
+                      } else if (typeof img === 'string') {
+                        imageUrl = img;
+                      } else if (img && img.image_path) {
+                        imageUrl = BASE_URL+img.image_path;
+                      }
+                      return (
+                        <div key={index} style={{ position: 'relative', display: 'inline-block' }}>
+                          <img src={imageUrl} alt={`Gallery Preview ${index + 1}`} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4, border: '1px solid #d9d9d9' }} />
+                          <Button
+                            type="text"
+                            style={{ position: 'absolute', top: -5, right: -5, background: '#ff4d4f', color: 'white', borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', border: 'none', zIndex: 1, padding: 0 }}
+                            onClick={() => handleDeleteGalleryImage(index)}
+                          >×</Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {(formState.gallery_images || []).length >= 5 && (
+                    <div style={{ color: '#ff4d4f', fontSize: 12, marginTop: 4 }}>Maximum 5 images allowed.</div>
+                  )}
                 </Form.Item>
               </div>
             </div>

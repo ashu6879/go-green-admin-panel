@@ -65,6 +65,12 @@ const AllSubCategory = () => {
     handleImageChange(fileObj);
   };
 
+  const expandedRowRender = record => (
+    <div style={{ padding: 8 }}>
+      <b>Description:</b> {record.description || 'No description'}
+    </div>
+  );
+
   const columns = [
     {
       title: '#',
@@ -90,6 +96,11 @@ const AllSubCategory = () => {
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
+      render: (text) => (
+        <span style={{ maxWidth: 180, display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }} title={text}>
+          {text}
+        </span>
+      ),
     },
     {
       title: 'Logo',
@@ -119,7 +130,7 @@ const AllSubCategory = () => {
           checked={status === 1}
           checkedChildren="Active"
           unCheckedChildren="Inactive"
-          loading={statusLoading[record.id]}
+          loading={statusLoading[record?.id]}
           onChange={checked => handleToggleActive(record.id, checked ? 1 : 0)}
         />
       ),
@@ -127,7 +138,7 @@ const AllSubCategory = () => {
     {
       title: 'Action',
       key: 'action',
-      width: 160,
+      width: 100,
       render: (_, record) => (
         <Space>
           <Button icon={<EditOutlined />} onClick={() => openEditModal(record)} />
@@ -138,7 +149,7 @@ const AllSubCategory = () => {
   ];
 
   return (
-    <div className="pt-4">
+    <div className="p2">
       <h4 style={{ marginBottom: 16 }}>All Subcategories</h4>
       <Space style={{ marginBottom: 16 }}>
         <Input.Search
@@ -170,8 +181,12 @@ const AllSubCategory = () => {
         loading={loading}
         pagination={pagination}
         onChange={onTableChange}
-        rowKey={record => record.id}
+        rowKey={record => record?.id}
         scroll={{ x: 'max-content' }}
+        expandable={{
+          expandedRowRender,
+          expandIconColumnIndex: 4, // after Description column (index 2)
+        }}
       />
       {/* Edit Modal */}
       <Modal

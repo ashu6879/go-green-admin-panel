@@ -88,7 +88,7 @@ const Orders = () => {
   }
 
   return (
-    <div>
+    <div className='p2'> 
       <h2>Orders</h2>
       <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
         <Input.Search
@@ -110,7 +110,7 @@ const Orders = () => {
           optionFilterProp="children"
         >
           {vendors.map(vendor => (
-            <Select.Option key={vendor.custom_id} value={vendor.custom_id}>
+            <Select.Option key={vendor.id} value={vendor.name}>
               {vendor.store_name}
             </Select.Option>
           ))}

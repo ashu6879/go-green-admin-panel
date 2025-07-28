@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getAllProducts, getAllCategories, getAllSubCategories, productfetchBrands } from '../../../services/apiService';
+import { getAllProducts, getAllCategories, getAllSubCategories, productfetchBrands, deleteProduct } from '../../../services/apiService';
 import axios from 'axios';
 import orderBy from 'lodash/orderBy';
 
@@ -189,6 +189,8 @@ export default function useProductTable() {
           key !== "featured_image" &&
           key !== "gallery_images" &&
           key !== "attributes" &&
+          key !== "variants" &&
+          key !== "addons" &&
           value !== undefined &&
           value !== null 
         ) {
@@ -208,14 +210,28 @@ export default function useProductTable() {
       if (formState.gallery_images && formState.gallery_images.length > 0) {
         formState.gallery_images.forEach((file) => {
           if (file instanceof File) {
-            formData.append("galleryImages", file); // No []
-          }else{
-            formData.append("existing_galleryImages", file); // No []
-
+            formData.append("galleryImages", file); // New upload
+          } else if (typeof file === 'string') {
+            formData.append("existingGalleryImages", file); // Already a URL
+          } else if (file && typeof file === 'object') {
+            // Try to extract URL from known properties
+            if (file.image_path) {
+              formData.append("existingGalleryImages", file.image_path);
+            } else if (file.url) {
+              formData.append("existingGalleryImages", file.url);
+            } else {
+              // Fallback: toString (should not happen)
+              formData.append("existingGalleryImages", String(file));
+            }
           }
         });
       }
-
+      // if (Array.isArray(formState?.variants) && formState?.variants.length > 0) {
+      //   formData.append("variants", JSON.stringify(formState?.variants));
+      // }
+      // if (Array.isArray(formState?.addons) && formState?.addons.length > 0) {
+      //   formData.append("addons", JSON.stringify(formState?.addons));
+      // }
       const response = await axios.post(`${API_URL}/products/update-products`, formData, config);
       if (response.data.success) {
         // Update only the edited product in local data
@@ -240,7 +256,7 @@ export default function useProductTable() {
         headers: { Authorization: `Bearer ${token}` },
         data: { id: selectedUserId },
       };
-      const response = await axios.delete(`${API_URL}/products/products`, config);
+      const response = await  deleteProduct ([selectedUserId]);
       if (response.data.success) {
         handleCloseDeleteModal();
         onTableChange(pagination, {}, {}); // refresh table

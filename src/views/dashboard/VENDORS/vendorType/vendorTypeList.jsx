@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Table, Button, Input, Badge, Modal, Form, Upload, Switch, Space } from 'antd';
-import { PlusOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons';
+import { Table, Button, Input, Badge, Modal, Form, Upload, Switch, Space, Popconfirm } from 'antd';
+import { PlusOutlined, EditOutlined, UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import useVendorType from './hooks/useVendorType';
 
 const VendorTypeList = () => {
@@ -10,8 +10,6 @@ const VendorTypeList = () => {
     search,
     setSearch,
     handleSearch,
-    // pagination,
-    // handleTableChange,
     pagedData,
     filteredVendorTypes,
     total,
@@ -28,35 +26,35 @@ const VendorTypeList = () => {
     handleEdit,
     editRecord,
     handleStatusSwitch,
+    handleDelete,
   } = useVendorType();
 
-  // Calculate paged data for current page
-  const pageData = filteredVendorTypes.slice(
-    (tablePagination.current - 1) * tablePagination.pageSize,
-    tablePagination.current * tablePagination.pageSize
-  );
+  // Calculate paged data for current page (now handled by hook)
+  // const pageData = filteredVendorTypes.slice(
+  //   (tablePagination.current - 1) * tablePagination.pageSize,
+  //   tablePagination.current * tablePagination.pageSize
+  // );
 
   const columns = [
     {
-      title: 'Sr No.',
+      title: '#',
       key: 'srno',
       width: 70,
       render: (_, __, index) => {
-        // Calculate serial number based on current page and page size
         return (tablePagination.current - 1) * tablePagination.pageSize + index + 1;
       },
     },
     {
       title: 'Icon',
-      dataIndex: 'icon',
+      dataIndex: 'vendor_type_image',
       key: 'icon',
       render: icon => icon ? <img src={icon} alt="icon" style={{ width: 32, height: 32, objectFit: 'contain' }} /> : null,
       width: 60,
     },
     {
       title: 'Type Name',
-      dataIndex: 'name',
-      key: 'name',
+      dataIndex: 'vendor_type',
+      key: 'vendor_type',
     },
     {
       title: 'Status',
@@ -65,7 +63,7 @@ const VendorTypeList = () => {
       render: status => (
         <span className={`badge ${status === 'active' ? 'badge-light-success' : 'badge-light-danger'}`}
           style={{ fontSize: 13, fontWeight: 500 }}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {status?.charAt(0).toUpperCase() + status?.slice(1)}
         </span>
       ),
       width: 100,
@@ -73,16 +71,19 @@ const VendorTypeList = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 140,
+      width: 180,
       render: (_, record) => (
         <Space>
           <Switch
             checked={record.status === 'active'}
-            onChange={() => handleStatusSwitch(record.id)}
+            onChange={() => handleStatusSwitch(record._id || record.id, record.status)}
             checkedChildren="Active"
             unCheckedChildren="Inactive"
           />
           <Button icon={<EditOutlined />} onClick={() => openEditModal(record)} size="small">Edit</Button>
+          <Popconfirm title="Delete this vendor type?" onConfirm={() => handleDelete(record._id || record.id)} okText="Yes" cancelText="No">
+            <Button icon={<DeleteOutlined />} danger size="small">Delete</Button>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -99,7 +100,7 @@ const VendorTypeList = () => {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: 24 }}>
+    <div className='p2'>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>Vendor Types</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>Add Vendor Type</Button>
@@ -115,18 +116,20 @@ const VendorTypeList = () => {
       </div>
       <Table
         columns={columns}
-        dataSource={pageData}
-        rowKey="id"
+        dataSource={filteredVendorTypes}
+        rowKey={record => record._id || record.id}
         loading={loading}
-        bordered
+        scroll={{x:"auto"}}
         size="middle"
         pagination={{
-          ...tablePagination,
+          current: tablePagination.current,
+          pageSize: tablePagination.pageSize,
           total: filteredVendorTypes.length,
           showSizeChanger: true,
-          pageSizeOptions: [ '10', '20', '50'],
+          pageSizeOptions: ['10', '20', '50'],
+          onChange: (page, pageSize) => setTablePagination({ current: page, pageSize }),
+          onShowSizeChange: (current, size) => setTablePagination({ current: 1, pageSize: size }),
         }}
-        onChange={(pagination) => setTablePagination(pagination)}
       />
       {/* Add Modal */}
       <Modal
@@ -137,29 +140,28 @@ const VendorTypeList = () => {
         okText="Add"
         zIndex={2000}
         destroyOnClose
+        confirmLoading={loading}
       >
         <Form layout="vertical">
           <Form.Item label="Type Name" required>
             <Input
-              value={formValues.name}
-              onChange={e => setFormValues(fv => ({ ...fv, name: e.target.value }))}
+              value={formValues.vendor_type}
+              onChange={e => setFormValues(fv => ({ ...fv, vendor_type: e.target.value }))}
               placeholder="Enter type name"
             />
           </Form.Item>
           <Form.Item label="Icon" required>
             <Upload.Dragger {...uploadProps} style={{ padding: 8 }}>
-              {formValues.icon ? (
-                <img src={formValues.icon} alt="icon" style={{ width: 48, height: 48, objectFit: 'contain', margin: 8 }} />
+              {formValues.vendor_type_image ? (
+                <img src={typeof formValues.vendor_type_image === 'string' ? formValues.vendor_type_image : URL.createObjectURL(formValues.vendor_type_image)} alt="icon" style={{ width: 48, height: 48, objectFit: 'contain', margin: 8 }} />
               ) : (
                 <>
-                <p className="ant-upload-drag-icon">
-                <UploadOutlined />
-              </p>
-                {/* <p>Click or drag image to upload</p> */}
+                  <p className="ant-upload-drag-icon">
+                    <UploadOutlined />
+                  </p>
+                  <p>Click or drag image to upload</p>
                 </>
               )}
-                              <p>Click or drag image to upload</p>
-
             </Upload.Dragger>
           </Form.Item>
         </Form>
@@ -173,26 +175,24 @@ const VendorTypeList = () => {
         okText="Update"
         zIndex={2000}
         destroyOnClose
+        confirmLoading={loading}
       >
         <Form layout="vertical">
           <Form.Item label="Type Name" required>
             <Input
-              value={formValues.name}
-              onChange={e => setFormValues(fv => ({ ...fv, name: e.target.value }))}
+              value={formValues.vendor_type}
+              onChange={e => setFormValues(fv => ({ ...fv, vendor_type: e.target.value }))}
               placeholder="Enter type name"
             />
           </Form.Item>
-          <Form.Item label="Icon" required>
+          <Form.Item label="Icon">
             <Upload.Dragger {...uploadProps} style={{ padding: 8 }}>
-              {/* <p className="ant-upload-drag-icon" style={{ marginBottom: 8 }}>
-                <UploadOutlined style={{ fontSize: 32 }} />
-              </p> */}
-              {formValues.icon ? (
-                <img src={formValues.icon} alt="icon" style={{ width: 48, height: 48, objectFit: 'contain', margin: 8 }} />
+              {formValues.vendor_type_image ? (
+                <img src={typeof formValues.vendor_type_image === 'string' ? formValues.vendor_type_image : URL.createObjectURL(formValues.vendor_type_image)} alt="icon" style={{ width: 48, height: 48, objectFit: 'contain', margin: 8 }} />
               ) : (
                 <p className="ant-upload-drag-icon" >
-                <UploadOutlined style={{ fontSize: 48 }} />
-              </p> 
+                  <UploadOutlined style={{ fontSize: 48 }} />
+                </p>
               )}
               <p>Click or drag image to upload</p>
             </Upload.Dragger>

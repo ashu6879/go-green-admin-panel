@@ -258,7 +258,7 @@ const ProductPreview = ({
                       color: '#52c41a',
                       lineHeight: 1
                     }}>
-                      ₹{product.discounted_value || product.price}
+                      {formatPrice(product.discounted_value || product.price)}
                     </div>
                     {/* Original Price (crossed out) */}
                     {product.discount_percent > 0 && (
@@ -268,7 +268,7 @@ const ProductPreview = ({
                         textDecoration: 'line-through',
                         fontWeight: '500'
                       }}>
-                        ₹{product.price}
+                        {formatPrice(product.price)}
                       </div>
                     )}
                   </div>
@@ -280,7 +280,7 @@ const ProductPreview = ({
                       fontWeight: '500',
                       marginTop: 4
                     }}>
-                      You save ₹{(product.price - (product.discounted_value || product.price)).toFixed(2)}
+                      You save {formatPrice(product.price - (product.discounted_value || product.price))}
                     </div>
                   )}
                 </div>

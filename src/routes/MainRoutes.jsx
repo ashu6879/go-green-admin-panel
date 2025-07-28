@@ -2,9 +2,16 @@ import { lazy } from 'react';
 
 import AdminLayout from 'layouts/AdminLayout';
 import GuestLayout from 'layouts/GuestLayout';
-import Orders from '../views/dashboard/ORDERS/Orders';
-import VendorTypeList from '../views/dashboard/VENDORS/vendorType/vendorTypeList';
-import VendorTable from '../views/dashboard/VENDORS/AllVendors/vendorTabel';
+import SingleVendor from '../views/dashboard/VENDORS/AllVendors/SingleVendor';
+import UpdateProduct from '../views/products/updateProduct/upDateProduct';
+
+
+// import Orders from '../views/dashboard/ORDERS/Orders';
+// import VendorTypeList from '../views/dashboard/VENDORS/vendorType/vendorTypeList';
+// import VendorTable from '../views/dashboard/VENDORS/AllVendors/vendorTabel';
+const Orders = lazy(() => import('../views/dashboard/ORDERS/Orders'));
+const VendorTypeList = lazy(() => import('../views/dashboard/VENDORS/vendorType/vendorTypeList'));
+const VendorTable = lazy(() => import('../views/dashboard/VENDORS/AllVendors/vendorTabel'));
 
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
 
@@ -22,6 +29,8 @@ const Sample = lazy(() => import('../views/sample'));
 const AddUser = lazy(() => import('../views/users/addUser'));
 const AllUser = lazy(() => import('../views/users/allUser'));
 const AddProducts = lazy(() => import('../views/products/addProducts'));
+const AddProducts2 = lazy(() => import('../views/products/addProducts_redesigned'));
+
 const AllProducts = lazy(() => import('../views/products/allProducts'));
 const ProductDiscount = lazy(() => import('../views/products/productDiscount'));
 const AddCategory = lazy(() => import('../views/product-category/addCategory'));
@@ -94,6 +103,10 @@ const MainRoutes = {
           path: '/add-Products',
           element: <AddProducts />
         },
+        {
+          path: '/products/update/:id',
+          element: <UpdateProduct />
+        },
 
         {
           path: '/all-Products',
@@ -142,12 +155,7 @@ const MainRoutes = {
         {
           path: '/all-orders',
           element: <Orders />
-        },
-
-        // {
-        //   path: '/add-banner',
-        //   element: <AddAppBanner />
-        // },
+        },                                                                                                                                                                                                        
         {
           path: '/all-banner',
           element: <AllAppBanner />
@@ -158,8 +166,12 @@ const MainRoutes = {
           element: <VendorTypeList />
         },
         {
-          path: '/vendors/all',
+          path: '/vendors/',
           element: <VendorTable />
+        },
+        {
+          path: '/vendors/:id',
+          element: <SingleVendor/>
         }
       ]
     },

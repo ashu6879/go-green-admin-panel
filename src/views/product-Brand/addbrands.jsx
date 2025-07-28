@@ -71,7 +71,7 @@ const AddProductBrand = () => {
     };
 
     return (
-        <div className="pt-4" style={{ maxWidth: 700, margin: "0 auto" }}>
+        <div className="p2" style={{ maxWidth: 700, margin: "0 auto" }}>
             <Card className="borderless w-100">
                 <Card.Body>
                     <h4 className="mb-3 f-w-400 text-center">Add Product Brand</h4>

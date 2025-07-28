@@ -79,7 +79,7 @@ const AddSubCategory = () => {
           "Content-Type": "multipart/form-data",
         },
       };
-      await axios.post(`${API_URL}/subcategories`, formData, config);
+      await axios.post(`${API_URL}/subcategory/subcategories`, formData, config);
       setShowModal(true);
       form.resetFields();
       setFile(null);

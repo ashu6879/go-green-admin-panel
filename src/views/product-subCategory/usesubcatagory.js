@@ -7,6 +7,7 @@ const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 const token = localStorage.getItem('token');
 
 export default function useSubcategoryHook() {
+  const [allSubcategories, setAllSubcategories] = useState([]); // Store all data here
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,61 +24,61 @@ export default function useSubcategoryHook() {
   const [statusLoading, setStatusLoading] = useState({});
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Fetch categories and subcategories
-  const fetchData = useCallback(async (params = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [catRes, subcatRes] = await Promise.all([
-        getAllCategories(),
-        getAllSubCategories(),
-      ]);
-      let subcategories = subcatRes.success ? subcatRes.data || [] : [];
-      let cats = catRes.success ? catRes.data || [] : [];
-      // Add parent category name to subcategories
-      subcategories = subcategories.map((sub) => ({
-        ...sub,
-        category_name: cats.find((c) => c.id === sub.category_id)?.name || 'N/A',
-      }));
-      // Search filter
-      if (search) {
-        subcategories = subcategories.filter(
-          (sub) =>
-            sub.name.toLowerCase().includes(search.toLowerCase()) ||
-            sub.description?.toLowerCase().includes(search.toLowerCase())
-        );
-      }
-      // Parent category filter
-      if (parentFilter) {
-        subcategories = subcategories.filter((sub) => String(sub.category_id) === String(parentFilter));
-      }
-      // Sorting
-      if (params.sorter && params.sorter.field && params.sorter.order) {
-        const { field, order } = params.sorter;
-        subcategories = [...subcategories].sort((a, b) => {
-          if (order === 'ascend') return a[field] > b[field] ? 1 : -1;
-          return a[field] < b[field] ? 1 : -1;
-        });
-      }
-      // Pagination
-      const total = subcategories.length;
-      const { current, pageSize } = params.pagination || pagination;
-      const paged = subcategories.slice((current - 1) * pageSize, current * pageSize);
-      setData(paged);
-      setPagination((prev) => ({ ...prev, current, pageSize, total }));
-      setCategories(cats);
-    } catch (err) {
-      setError(err.message || 'Failed to fetch subcategories');
-    } finally {
-      setLoading(false);
-    }
-  }, [search, parentFilter]);
-
+  // Fetch all categories and subcategories ONCE
   useEffect(() => {
-    fetchData({ pagination, sorter });
-    // eslint-disable-next-line
+    const fetchAll = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [catRes, subcatRes] = await Promise.all([
+          getAllCategories(),
+          getAllSubCategories(),
+        ]);
+        let subcategories = subcatRes.success ? subcatRes.data || [] : [];
+        let cats = catRes.success ? catRes.data || [] : [];
+        subcategories = subcategories.map((sub) => ({
+          ...sub,
+          category_name: cats.find((c) => c.id === sub.category_id)?.name || 'N/A',
+        }));
+        setAllSubcategories(subcategories);
+        setCategories(cats);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch subcategories');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
   }, []);
-  // }, [search, parentFilter, pagination.current, pagination.pageSize, sorter]);
+
+  // In-memory filter/search/sort/paginate
+  useEffect(() => {
+    let filtered = allSubcategories;
+    if (search) {
+      filtered = filtered.filter(
+        (sub) =>
+          sub.name.toLowerCase().includes(search.toLowerCase()) ||
+          sub.description?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    if (parentFilter) {
+      filtered = filtered.filter((sub) => String(sub.category_id) === String(parentFilter));
+    }
+    // Sorting
+    if (sorter && sorter.field && sorter.order) {
+      const { field, order } = sorter;
+      filtered = [...filtered].sort((a, b) => {
+        if (order === 'ascend') return a[field] > b[field] ? 1 : -1;
+        return a[field] < b[field] ? 1 : -1;
+      });
+    }
+    // Pagination
+    const total = filtered.length;
+    const { current, pageSize } = pagination;
+    const paged = filtered.slice((current - 1) * pageSize, current * pageSize);
+    setData(paged);
+    setPagination((prev) => ({ ...prev, total }));
+  }, [allSubcategories, search, parentFilter, pagination.current, pagination.pageSize, sorter]);
 
   const onTableChange = (newPagination, filters, newSorter) => {
     setPagination((prev) => ({ ...prev, current: newPagination.current, pageSize: newPagination.pageSize }));
@@ -98,9 +99,7 @@ export default function useSubcategoryHook() {
       formData.append('id', subcategoryId);
       formData.append('status', isActive ? 1 : 0);
       const result = await updateSubCategory(formData);
-
-      // await axios.put(`${API_URL}/subcategory/subcategories`, formData, config);
-      setData((prev) => prev.map((sub) => (sub.id === subcategoryId ? { ...sub, status: isActive ? 1 : 0 } : sub)));
+      setAllSubcategories((prev) => prev.map((sub) => (sub.id === subcategoryId ? { ...sub, status: isActive ? 1 : 0 } : sub)));
     } catch (err) {
       setError('Failed to update status');
     } finally {
@@ -147,16 +146,24 @@ export default function useSubcategoryHook() {
         formData.append("description", values.description);
         formData.append("category_id", values.category_id);
         formData.append("status", values.status ? 1 : 0);
-        if (fileObj instanceof File) {
-          formData.append("subcategory_logo", fileObj);
-        } else if (selectedSubcategory.subcategory_logo) {
-          formData.append("existing_category_logo", selectedSubcategory.subcategory_logo);
+        // Always check for file in state
+        if (selectedSubcategory.subcategory_logo instanceof File) {
+          formData.append("subcategory_logo", selectedSubcategory.subcategory_logo);
         }
         const result = await updateSubCategory(formData);
         if (result.success && result.data) {
-          setData((prev) =>
+          // Ensure the image URL is correct (prepend IMAGE_BASE_URL if needed)
+          const updated = {
+            ...result.data,
+            subcategory_logo: result.data.subcategory_logo
+              ? result.data.subcategory_logo.startsWith('http')
+                ? result.data.subcategory_logo
+                : IMAGE_BASE_URL + result.data.subcategory_logo
+              : '',
+          };
+          setAllSubcategories((prev) =>
             prev.map((cat) =>
-              cat.id === selectedSubcategory.id ? result.data : cat
+              cat?.id === selectedSubcategory?.id ? updated : cat
             )
           );
         }
@@ -176,7 +183,7 @@ export default function useSubcategoryHook() {
       if (selectedSubcategory) {
         const result = await deleteSubCategory(selectedSubcategory.id);
         if (result.success) {
-          setData((prev) => prev.filter((sub) => sub.id !== selectedSubcategory.id));
+          setAllSubcategories((prev) => prev.filter((sub) => sub.id !== selectedSubcategory.id));
           closeDeleteModal();
         } else {
           setError(result.error || "Failed to delete subcategory. Please try again.");

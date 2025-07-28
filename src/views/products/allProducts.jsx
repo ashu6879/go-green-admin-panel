@@ -8,11 +8,12 @@ import ProductPreview from './components/ProductPreview';
 import FilterControls from './components/FilterControls';
 import ProductUpdateModal from './components/ProductUpdateModal';
 // import { Eye } from '@ant-design/icons';
-
+//reactrouterdom
+import { useNavigate } from 'react-router-dom';
+import { formatPrice } from "../../services/utils/gen_utility";
 const { useBreakpoint } = Grid;
 const { Dragger } = Upload;
-
-export const productTableColumns = (BASE_URL, handleUpdate, handleDelete, pagination, handleToggleFeatured, handleToggleTodayDeal, handlePreview) => [
+export const productTableColumns = (BASE_URL, handleUpdate, handleDelete, pagination, handleToggleFeatured, handleToggleTodayDeal, handlePreview,navigate) => [
   {
     title: '#',
     dataIndex: 'index',
@@ -66,7 +67,7 @@ export const productTableColumns = (BASE_URL, handleUpdate, handleDelete, pagina
             fontSize: '18px',
             lineHeight: 1
           }}>
-            ₹{hasDiscount ? record.discounted_value : price}
+            {hasDiscount ? formatPrice(record.discounted_value) : formatPrice(price)}
           </span>
           {hasDiscount && (
             <span>
@@ -76,7 +77,7 @@ export const productTableColumns = (BASE_URL, handleUpdate, handleDelete, pagina
                 fontSize: '13px',
                 marginTop: 2
               }}>
-                ₹{price}
+                {formatPrice(price)}
               </span>
               <span style={{
                 color: '#ff4d4f',
@@ -84,7 +85,7 @@ export const productTableColumns = (BASE_URL, handleUpdate, handleDelete, pagina
                 fontWeight: 600,
                 marginLeft: 6
               }}>
-                ({record.discount_percent}% off)
+                ({  record.discount_percent}% off)
               </span>
             </span>
           )}
@@ -141,9 +142,10 @@ export const productTableColumns = (BASE_URL, handleUpdate, handleDelete, pagina
     key: 'action',
     width: 120,
     render: (_, record) => (
+
       <div className="d-flex align-items-center">
         <Button type="text" icon={<Eye style={{ color: '#52c41a', fontSize: 18 }} />} onClick={() => handlePreview(record)} style={{ marginRight: 8 }} />
-        <Button type="text" icon={<Pencil className="text-primary" style={{ fontSize: 18 }} />} onClick={() => handleUpdate(record)} style={{ marginRight: 8 }} />
+        <Button type="text" icon={<Pencil className="text-primary" style={{ fontSize: 18 }} />} onClick={() => navigate(`/products/update/${record.id}`)} />
         <Button type="text" icon={<Trash style={{ color: '#ff4d4f', fontSize: 18 }} />} onClick={() => handleDelete(record)} />
       </div>
     ),
@@ -151,6 +153,7 @@ export const productTableColumns = (BASE_URL, handleUpdate, handleDelete, pagina
 ];
 
 const ProductList = () => {
+  const navigate = useNavigate();
   const {
     nameFilter, setNameFilter,
     categoryFilter, setCategoryFilter,
@@ -181,7 +184,7 @@ const ProductList = () => {
     setPreviewProduct(null);
   };
 
-  const columns = productTableColumns(BASE_URL, handleUpdate, handleDelete, pagination, handleToggleFeatured, handleToggleTodayDeal, handlePreview);
+  const columns = productTableColumns(BASE_URL, handleUpdate, handleDelete, pagination, handleToggleFeatured, handleToggleTodayDeal, handlePreview,navigate);
 
   const handleResetFilters = () => {
     setNameFilter("");
@@ -192,7 +195,7 @@ const ProductList = () => {
   };
 
   return (
-    <div className="mt-4 container-p0">
+    <div className="pt-4 p-3">
       <div className="mb-3 p-2 bg-white">
       {/* filters */}
         {screens.md ? (
@@ -250,6 +253,8 @@ const ProductList = () => {
 
       <div className="p-2 bg-white">
       {/* tabel */}
+
+      
         <Table
           columns={columns}
           dataSource={data}

@@ -1,42 +1,56 @@
 import { useState, useEffect } from 'react';
-
-// Dummy data for vendors
-const dummyVendors = Array.from({ length: 50 }, (_, i) => ({
-  storeImage: `https://i.pravatar.cc/40?img=${i+1}`,
-  storeName: `Store ${i+1}`,
-  Phone: `123-456-78${i%10}${i}`,
-  Email: `store${i+1}@example.com`,
-  Address: `Address ${i+1}, City, Country`,
-  storeid: `ID${1000 + i}`,
-}));
+import { getAllVendors } from '../../../../../services/apiService';
+import axios from 'axios';
 
 export default function useVendors() {
   const [vendors, setVendors] = useState([]);
+  const [allVendors, setAllVendors] = useState([]); // Store all vendors for client-side filtering
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState({ storeName: '', storeid: '' });
+  const [search, setSearch] = useState({ storeName: '', customId: '' }); // Add customId for searching
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      let filtered = dummyVendors;
-      if (search.storeName) {
-        filtered = filtered.filter(v => v.storeName.toLowerCase().includes(search.storeName.toLowerCase()));
-      }
-      if (search.storeid) {
-        filtered = filtered.filter(v => v.storeid.toLowerCase().includes(search.storeid.toLowerCase()));
-      }
-      setTotal(filtered.length);
-      const start = (page - 1) * pageSize;
-      const end = start + pageSize;
-      setVendors(filtered.slice(start, end));
-      setLoading(false);
-    }, 400);
-  }, [search, page, pageSize]);
+    setError(null);
+    getAllVendors()
+      .then((res) => {
+        if (res.success === false) {
+          setError(res.message || 'Failed to fetch vendors');
+          setAllVendors([]);
+        } else {
+          // API may return {success, data: []} or just the array
+          const vendorList = res.data || res.vendors || res || [];
+          setAllVendors(vendorList);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to fetch vendors');
+        setAllVendors([]);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    let filtered = allVendors;
+    if (search.storeName) {
+      filtered = filtered.filter(v =>
+        v.store_name && v.store_name.toLowerCase().includes(search.storeName.toLowerCase())
+      );
+    }
+    if (search.customId) {
+      filtered = filtered.filter(v =>
+        v.custom_id && v.custom_id.toLowerCase().includes(search.customId.toLowerCase())
+      );
+    }
+    setTotal(filtered.length);
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    setVendors(filtered.slice(start, end));
+  }, [allVendors, search, page, pageSize]);
 
   const onSearch = (field, value) => {
     setSearch(prev => ({ ...prev, [field]: value }));
@@ -46,6 +60,31 @@ export default function useVendors() {
   const onPageChange = (newPage, newPageSize) => {
     setPage(newPage);
     setPageSize(newPageSize);
+  };
+
+  // Toggle vendor status using new API
+  const handleToggleStatus = async (vendorId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/vendors/vendor-status`,
+        {
+          user_id: vendorId,
+          status: newStatus,
+          role_id: 1,
+          // deactivated_by:1
+        },
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      setAllVendors(prev => prev.map(v => v.vendor_id === vendorId ? { ...v, status: newStatus } : v));
+    } catch (err) {
+      setError('Failed to update vendor status');
+    }
   };
 
   return {
@@ -58,5 +97,6 @@ export default function useVendors() {
     total,
     onSearch,
     onPageChange,
+    handleToggleStatus,
   };
 }

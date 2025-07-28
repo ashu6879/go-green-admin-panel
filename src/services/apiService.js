@@ -69,6 +69,18 @@ export const getAllProducts = async () => {
 };
 
 
+// ✅ Update a product
+export const updateProduct = async (formData) => {
+    try {
+      
+        const response = await axios.post(`${API_URL}/products/update-products`, formData, configwithform);
+        return { success: response.data.success !== undefined ? response.data.success : true, data: response.data };
+    } catch (error) {
+        console.error("Failed to update product:", error);
+        return { success: false, error: error.response?.data || error.message };
+    }
+};
+
 // ✅ Add a new product brand
 export const addProductBrand = async (formData) => {
     try {
@@ -263,7 +275,7 @@ export const saveOrUpdateDiscount = async (selected) => {
   
       const url = selected.id
         ? `${API_URL}/productdiscount/update-discount`
-        : `${API_URL}/productdiscount/add-discount`;
+        : `${API_URL}/productdiscount/add-update-discount`;
   
       const method = selected.id ? "put" : "post";
   
@@ -359,11 +371,75 @@ export const addProduct = async (formData) => {
   }
 };
 
-export const getAllVendors = async () => {
+
+
+export const getProductById = async (id) => {
   try {
-    const response = await axios.get(`${API_URL}/vendors/getallvendorsforadmin/`);
+    const response = await axios.post(`${API_URL}/products/productbyid`,{id},config);    
     return response.data;
   } catch (error) {
     return { success: false, message: error.message, data: [] };
+  }
+};
+
+export const getAllVendors = async (active = false) => {   
+  try {
+    
+    const response = await axios.get(`${API_URL}/vendors/getallvendorsforadmin${active ? "?filter=active":""}`,config);
+    return response.data;
+  } catch (error) {
+    return { success: false, message: error.message, data: [] };
+  }
+};
+
+// Vendor Type APIs
+export const createVendorType = async (formData) => {
+  try {
+    const response = await axios.post(`${API_URL}/vendors/type`, formData, configwithform);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
+
+export const getAllVendorTypes = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/vendors/type`, config);
+    return { success: true, data: response.data.data || [] };
+  } catch (error) {
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
+
+export const updateVendorType = async (id, formData) => {
+  try {
+    const response = await axios.put(`${API_URL}/vendors/type/${id}`, formData, configwithform);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
+
+export const deleteVendorType = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/vendors/type/${id}`, config);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
+
+
+
+
+export const deleteProduct = async (product_ids) => {
+  try {
+    const response = await axios.delete(`${API_URL}/products/products`, {
+      ...config,             // includes your headers
+      data: { product_ids }  // includes your body (important!)
+    });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data || error.message };
   }
 };

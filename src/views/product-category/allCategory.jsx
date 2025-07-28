@@ -26,6 +26,8 @@ const AllCategory = () => {
     openDeleteModal,
     closeDeleteModal,
     handleDelete,
+    search,
+    setSearch,
   } = useCatagoryHook();
 
   const [form] = Form.useForm();
@@ -41,6 +43,12 @@ const AllCategory = () => {
       });
     }
   }, [editModal, selectedCategory, form]);
+
+  const expandedRowRender = record => (
+    <div style={{ padding: 8 }}>
+      <b>Description:</b> {record.description || 'No description'}
+    </div>
+  );
 
   const columns = [
     {
@@ -81,6 +89,11 @@ const AllCategory = () => {
       key: 'description',
       width: 250,
       ellipsis: true,
+      render: (text) => (
+        <span style={{ maxWidth: 200, display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }} title={text}>
+          {text}
+        </span>
+      ),
     },
     {
       title: 'Status',
@@ -113,12 +126,20 @@ const AllCategory = () => {
   };
 
   return (
-    <div className="pt-4">
+    <div className="p2">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h4 style={{ margin: 0 }}>All Categories</h4>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/product-category/addCategory')}>
           Add Category
         </Button>
+      </div>
+      <div style={{ marginBottom: 16, maxWidth: 250 }}>
+        <Input.Search
+          placeholder="Search by name"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          allowClear
+        />
       </div>
       <Table
         columns={columns}
@@ -128,6 +149,10 @@ const AllCategory = () => {
         onChange={onTableChange}
         rowKey={record => record.id}
         scroll={{ x: 'max-content' }}
+        expandable={{
+          expandedRowRender,
+          expandIconColumnIndex: 4, // after Description column (index 3)
+        }}
       />
       {/* Edit Modal */}
       <Modal

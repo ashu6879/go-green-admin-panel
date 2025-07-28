@@ -207,3 +207,11 @@ img.logo.logo-lg {
   padding-top: 2px !important;
   padding-bottom: 2px !important;
 }
+
+
+
+@media (min-width: 576px) {
+    .p2 {
+      padding: 1.5rem; /* Adjust the value as needed */
+    }
+  }

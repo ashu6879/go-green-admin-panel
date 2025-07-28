@@ -18,7 +18,7 @@ export default function AdminLayout() {
   const windowSize = useWindowSize();
   const configContext = useContext(ConfigContext);
   const bodyElement = document.body;
-  const { collapseLayout } = configContext.state;
+  const { collapseLayout, collapseMenu } = configContext.state;
   const { dispatch } = configContext;
 
   useEffect(() => {
@@ -34,6 +34,8 @@ export default function AdminLayout() {
   }
 
   let containerClass = ['pc-container'];
+  // Add margin-left 80px if sidebar is collapsed
+  const containerStyle = collapseMenu ? { marginLeft: 80 } : {};
 
   let adminlayout = (
     <>
@@ -42,13 +44,12 @@ export default function AdminLayout() {
       <NavBar />
 
       <Navigation />
-      <div className={containerClass.join(' ')}>
+      <div className={containerClass.join(' ')} style={containerStyle}>
         <div className="pcoded-content">
           <>
-         <div className="d-block  d-sm-none ">
-  <Breadcrumb />
-</div>
-
+            <div className="d-block  d-sm-none ">
+            </div>
+              {/* <Breadcrumb /> */}
             <Suspense fallback={<Loader />}>
               <Outlet />
             </Suspense>

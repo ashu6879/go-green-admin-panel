@@ -10,7 +10,7 @@ import Breadcrumb from '../Breadcrumb';
 
 export default function NavBar() {
   const configContext = useContext(ConfigContext);
-  const { headerBackColor, collapseTabMenu, collapseHeaderMenu } = configContext.state;
+  const { headerBackColor, collapseTabMenu, collapseHeaderMenu, collapseMenu } = configContext.state;
 
   let headerClass = ['pc-header', headerBackColor];
   if (collapseHeaderMenu) {
@@ -21,6 +21,9 @@ export default function NavBar() {
   if (collapseTabMenu) {
     mobDrpClass = [...mobDrpClass, 'mob-drp-active'];
   }
+
+  // Set left 90px if sidebar is collapsed
+  const headerStyle = collapseMenu ? { left: 80, position: 'fixed', width: 'calc(100% - 90px)', zIndex: 1100 } : {};
 
   let navBar = (
     <>
@@ -41,5 +44,5 @@ export default function NavBar() {
     </>
   );
 
-  return <header className={headerClass.join(' ')}>{navBar}</header>;
+  return <header className={headerClass.join(' ')} style={headerStyle}>{navBar}</header>;
 }

@@ -93,12 +93,18 @@ const AllBrands = () => {
       dataIndex: 'name',
       key: 'name',
       sorter: true,
+      // The expand icon will appear before this column by default
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
+      render: (text) => (
+        <span style={{ maxWidth: 180, display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle' }} title={text}>
+          {text}
+        </span>
+      ),
     },
     {
       title: 'Category',
@@ -152,7 +158,7 @@ const AllBrands = () => {
   ];
 
   return (
-    <div className="pt-4">
+    <div className="p2">
       <h4 style={{ marginBottom: 16 }}>All Brands</h4>
       <div style={{ marginBottom: 16 }}>
         <div className="row g-2">
@@ -192,7 +198,15 @@ const AllBrands = () => {
         onChange={onTableChange}
         rowKey={record => record.id}
         scroll={{ x: 'max-content' }}
-                />
+        expandable={{
+          expandedRowRender: record => (
+            <div style={{ padding: 8 }}>
+              <b>Description:</b> {record.description || 'No description'}
+            </div>
+          ),
+          expandIconColumnIndex: 3, // expand icon before Brand Name
+        }}
+      />
       {/* Edit Modal */}
       <Modal
         open={editModal}

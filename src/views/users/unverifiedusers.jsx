@@ -84,7 +84,7 @@ const UnverifiedUsers = ({user="vendors"}) => {
   ];
 
   return (
-    <div className="pt-4">
+    <div className="p2">
       <h4>Unverified {userType== "vendors"?"Vendors":"Rider"}</h4>
       {/* <div className="mb-3">
         <Button
