@@ -144,7 +144,7 @@ export const productTableColumns = (BASE_URL, handleUpdate, handleDelete, pagina
     render: (_, record) => (
 
       <div className="d-flex align-items-center">
-        <Button type="text" icon={<Eye style={{ color: '#52c41a', fontSize: 18 }} />} onClick={() => handlePreview(record)} style={{ marginRight: 8 }} />
+        <Button type="text" icon={<Eye style={{ color: '#52c41a', fontSize: 18 }} />} onClick={() =>navigate(`/products/${record.id}`)} style={{ marginRight: 8 }} />
         <Button type="text" icon={<Pencil className="text-primary" style={{ fontSize: 18 }} />} onClick={() => navigate(`/products/update/${record.id}`)} />
         <Button type="text" icon={<Trash style={{ color: '#ff4d4f', fontSize: 18 }} />} onClick={() => handleDelete(record)} />
       </div>

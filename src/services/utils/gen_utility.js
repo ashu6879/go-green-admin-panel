@@ -1,20 +1,48 @@
+export function formatTime(time) {
+  const [hour, minute] = time.split(':');
+  const date = new Date();
+  date.setHours(parseInt(hour));
+  date.setMinutes(parseInt(minute));
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+//convert time range to 12 hour format AND GIVE IT IN HH:MM AM/PM FORMAT 
 export function convertTimeRange(start, end) {
-    function formatTime(time) {
-      const [hour, minute] = time.split(':');
-      const date = new Date();
-      date.setHours(parseInt(hour));
-      date.setMinutes(parseInt(minute));
-      return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      });
-    }
-  
     return `${formatTime(start)} - ${formatTime(end)}`;
   }
 
 
+  //format phone number in US and Indian format (+1 (XXX) XXX XXXX or +91 XXXXX YYYYY)
+  //  --- IF YOU WANT TO ADD MORE COUNTRY CODE THEN ADD IT IN THE FUNCTION
+
+  export function formatPhone(number, countryCode="+1") {
+    // Remove all non-digit characters
+    const digits = number?.replace(/\D/g, '');
+  
+    if (countryCode === '+1') {
+      // US Format: +1 (XXX) XXX XXXX
+      const match = digits?.match(/^(\d{3})(\d{3})(\d{4})$/);
+      if (match) {
+        return `+1 (${match[1]}) ${match[2]} ${match[3]}`;
+      }
+    } else if (countryCode === '+91') {
+      // Indian Format: +91 XXXXX YYYYY
+      const match = digits?.match(/^(\d{5})(\d{5})$/);
+      if (match) {
+        return `+91 ${match[1]} ${match[2]}`;
+      }
+    }
+  
+    // Default: return as-is if format doesn't match
+    return `${countryCode} ${number?number:""}`;
+  }
+  
+
+  //format price in currency format
   export const formatPrice = (value, symbol = '$') => {
     const num = Number(value);
   
@@ -32,6 +60,7 @@ export function convertTimeRange(start, end) {
 
 
 
+//normalize attributes
 export function normalizeAttributes(allAttributesJson) {
     try {
       console.log("=============================================================");
@@ -72,3 +101,22 @@ export function normalizeAttributes(allAttributesJson) {
     }
   }
   
+
+  export function priceParsed(variants = [], manualPrice) {
+    // Step 1: If manualPrice is a valid number, return it
+    console.log("manualPrice",manualPrice)
+    console.log("variants",variants)
+    if (manualPrice !== undefined && !isNaN(Number(manualPrice))) {
+      return Number(manualPrice);
+    }
+   
+    // Step 2: If variants exist, find minimum price
+    if (variants.length > 0) {
+      const prices = variants.map(v => parseFloat(v.price));
+      console.log("price",Math.min(...prices))
+      return Math.min(...prices);
+    }
+   
+    // Step 3: If nothing available, return 0
+    return 0;
+  }

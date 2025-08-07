@@ -250,7 +250,7 @@ const menuItems = {
               id: 'all-products',
               title: 'All Products',
               type: 'item',
-              url: '/all-products',
+              url: '/products',
               classes: 'nav-item',
               icon: 'material-icons-two-tone',
               iconname: 'people_alt'
@@ -336,8 +336,6 @@ const menuItems = {
       id: 'manage-rider',
       title: 'Riders',
       type: 'collapse',
-      url: '/riders',
-
       icon: 'material-icons-two-tone',
       iconname: 'two_wheeler', // Rider/delivery icon
       children: [
@@ -345,7 +343,7 @@ const menuItems = {
           id: 'all-riders',
           title: 'All Riders',
           type: 'item',
-          url: '/riders/all',
+          url: '/riders',
           classes: 'nav-item',
           icon: 'material-icons-two-tone',
           iconname: 'two_wheeler' // Rider's vehicle

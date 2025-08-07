@@ -392,6 +392,15 @@ export const getAllVendors = async (active = false) => {
   }
 };
 
+export const getAllRiders = async (active = false) => {   
+  try {
+    
+    const response = await axios.get(`${API_URL}/riders/getallridersforadmin${active ? "?filter=active":""}`,config);
+    return response.data;
+  } catch (error) {
+    return { success: false, message: error.message, data: [] };
+  }
+};
 // Vendor Type APIs
 export const createVendorType = async (formData) => {
   try {
@@ -431,6 +440,53 @@ export const deleteVendorType = async (id) => {
 
 
 
+
+// Toggle vendor status
+export const updateVendorStatus = async (vendorId, newStatus) => {
+  try {
+    // const token = localStorage.getItem('token');
+    const response = await axios.post(
+      `${API_URL}/vendors/vendor-status`,
+      {
+        user_id: vendorId,
+        status: newStatus,
+        role_id: 1,
+      },
+     config
+      
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
+export const getRiderById = async (id) => {
+  try {
+    const response = await axios.get(`${API_URL}/riders/getallridersforadminbyID/${id}`, config);
+    return response.data;
+  } catch (error) {
+    return { success: false, message: error.message, data: [] };
+  }
+};
+
+export const updateRiderStatus = async (riderId, newStatus) => {
+  try {
+    // const token = localStorage.getItem('token');
+    const response = await axios.post(
+      `${API_URL}/riders/rider-status`,
+      {
+        user_id: riderId,
+        status: newStatus,
+        role_id: 1,
+      },
+     config
+      
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
 
 export const deleteProduct = async (product_ids) => {
   try {

@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Modal, Button as BsButton } from 'react-bootstrap';
 import { Form, Input, Select, Upload, Button, Space, message, Checkbox, Switch } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined, DollarOutlined } from '@ant-design/icons';
-import { getAllCategories, getAllSubCategoriesbyID, productfetchBrands, addProduct } from '../../services/apiService';
-// import useAddProductHook from "./hooks/useAddProductHook";
 import ProductVariants from './components/ProductVariants';
-import InputWithSuggestions from './components/InputWithSuggestions';
-import { unitOptions, quantityOptions } from './components/options';
+import { unitOptions } from './components/options';
 import Addons from './components/Addons';
 import '../../assets/scss/pages/uploder_override.scss';
 import useAddProductHook from './hooks/useAddProductHook';
@@ -15,7 +12,7 @@ const { Dragger } = Upload;
 
 const ProductRegistration = ({ data }) => {
   const [form] = Form.useForm();
-  
+
   // Use the custom hook for all logic/state
   const {
     categories,
@@ -36,11 +33,10 @@ const ProductRegistration = ({ data }) => {
     newAddonDraft,
     editingVariantIdx,
     newVariantDraft,
-    setDiscountPercent,
     selectedUnit,
-    setSelectedUnit,
     uploadProps,
-
+    setDiscountPercent,
+    setSelectedUnit,
     handleVendorChange,
     setShowModal,
     handleCategoryChange,
@@ -66,187 +62,11 @@ const ProductRegistration = ({ data }) => {
     handleUnitChange
   } = useAddProductHook(form, data);
 
-  // Add common unit options
-  // Add common quantity options
 
-  // Track selected unit for dynamic quantity suggestions
-
-  // Add custom CSS for upload preview layout
-  // useEffect(() => {
-  //   const style = document.createElement('style');
-  //   style.textContent = `
-  //     .ant-upload-list {
-  //       display: flex !important;
-  //       flex-wrap: wrap !important;
-  //       gap: 8px !important;
-  //       margin-top: 8px !important;
-  //     }
-  //     .ant-upload-list-item {
-  //       width: auto !important;
-  //       height: auto !important;
-  //       margin: 0 !important;
-  //       padding: 0 !important;
-  //       border: none !important;
-  //       background: none !important;
-  //     }
-  //     .ant-upload-list-item-container {
-  //       width: auto !important;
-  //       height: auto !important;
-  //     }
-  //     .upload-preview-container .ant-upload-list {
-  //       display: flex !important;
-  //       flex-wrap: wrap !important;
-  //       gap: 8px !important;
-  //     }
-  //   `;
-  //   document.head.appendChild(style);
-  //   return () => document.head.removeChild(style);
-  // }, []);
-
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     const response = await getAllCategories();
-  //     if (response.success) setCategories(response.data);
-  //   };
-  //   fetchCategories();
-  // }, []);
-
-  // useEffect(() => {
-  //   const fetchBrands = async () => {
-  //     const response = await productfetchBrands();
-  //     if (response.success) setBrands(response.data);
-  //   };
-  //   fetchBrands();
-  // }, []);
-
-  // const handleUnitChange = (unitValue) => {
-  //   form.setFieldsValue({
-  //     unit: unitValue,
-  //     quantity: "", // clear quantity on unit change
-  //   });
-  // };
-  // // Upload handlers
-  // const normFile = (e) => {
-  //   if (Array.isArray(e)) return e;
-  //   return e && e.fileList;
-  // };
-
-  // // Custom validation for file uploads
-  // const validateFileUpload = (rule, value) => {
-  //   console.log('Validating file upload:', value); // Debug log
-  //   if (!value || value.length === 0) {
-  //     return Promise.reject(new Error(rule.message));
-  //   }
-  //   // Check if files have originFileObj (actual files)
-  //   const hasValidFiles = value.some(file => file.originFileObj || file.url);
-  //   if (!hasValidFiles) {
-  //     return Promise.reject(new Error(rule.message));
-  //   }
-  //   return Promise.resolve();
-  // };
-
-  // // Custom upload props for preview
-  // const uploadProps = {
-  //   beforeUpload: (file) => {
-  //     const isImage = file.type.startsWith('image/');
-  //     if (!isImage) {
-  //       message.error('You can only upload image files!');
-  //       return false;
-  //     }
-  //     const isLt5M = file.size / 1024 / 1024 < 5;
-  //     if (!isLt5M) {
-  //       message.error('Image must be smaller than 5MB!');
-  //       return false;
-  //     }
-  //     return false; // Prevent auto upload
-  //   },
-  //   onChange: (info) => {
-  //     console.log('Product image onChange:', info.fileList); // Debug log
-  //     // Handle preview
-  //     if (info.fileList) {
-  //       info.fileList.forEach(file => {
-  //         if (file.originFileObj && !file.url) {
-  //           file.url = URL.createObjectURL(file.originFileObj);
-  //         }
-  //       });
-  //     }
-  //     // Update form field value
-  //     form.setFieldsValue({ product_image: info.fileList });
-  //     // Trigger form validation
-  //     setTimeout(() => {
-  //       form.validateFields(['product_image']);
-  //     }, 100);
-  //   },
-  //   onPreview: (file) => {
-  //     if (file.url) {
-  //       window.open(file.url);
-  //     }
-  //   },
-  //   showUploadList: {
-  //     showPreviewIcon: true,
-  //     showRemoveIcon: true,
-  //     showDownloadIcon: false,
-  //   },
-  //   itemRender: (originNode, file, fileList, actions) => {
-  //     return (
-  //       <div style={{
-  //         display: 'inline-flex',
-  //         position: 'relative',
-  //         margin: '4px',
-  //         flexShrink: 0
-  //       }}>
-  //         <img
-  //           src={file.url || file.thumbUrl}
-  //           alt={file.name}
-  //           style={{
-  //             width: 50,
-  //             height: 50,
-  //             objectFit: 'cover',
-  //             borderRadius: 4,
-  //             border: '1px solid #d9d9d9',
-  //             display: 'block'
-  //           }}
-  //         />
-  //         <div
-  //           style={{
-  //             position: 'absolute',
-  //             top: -5,
-  //             right: -5,
-  //             background: '#ff4d4f',
-  //             color: 'white',
-  //             borderRadius: '50%',
-  //             width: 20,
-  //             height: 20,
-  //             display: 'flex',
-  //             alignItems: 'center',
-  //             justifyContent: 'center',
-  //             cursor: 'pointer',
-  //             fontSize: '12px',
-  //             border: '2px solid white',
-  //             boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-  //             zIndex: 1
-  //           }}
-  //           onClick={() => {
-  //             actions.remove();
-  //             // Update form field value after removal
-  //             const currentFiles = form.getFieldValue('product_image') || [];
-  //             const updatedFiles = currentFiles.filter(f => f.uid !== file.uid);
-  //             form.setFieldsValue({ product_image: updatedFiles });
-  //             // Trigger validation after removal
-  //             setTimeout(() => {
-  //               form.validateFields(['product_image']);
-  //             }, 100);
-  //           }}
-  //         >
-  //           ×
-  //         </div>
-  //       </div>
-  //     );
-  //   }
-  // };
 
   return (
     <div className="p2 d-flex justify-content-center">
+
       <div style={{ width: '100%', maxWidth: 700 }}>
         <Card className="borderless w-100">
           <Card.Body>

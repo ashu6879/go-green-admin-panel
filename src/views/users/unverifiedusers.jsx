@@ -2,6 +2,7 @@ import React from "react";
 import { Table, Modal, Button, Input, Badge, Space } from "antd";
 import useUnverifiedUsers from "./unverifieduserhook";
 import UserPreview from "./components/UserPreview";
+import { formatPhone } from "../../services/utils/gen_utility";
 
 const UnverifiedUsers = ({user="vendors"}) => {
   const {
@@ -56,7 +57,8 @@ const UnverifiedUsers = ({user="vendors"}) => {
       title: "Phone Number",
       dataIndex: "phonenumber",
       key: "phonenumber",
-      render: (_, user) => `${user.prefix || ''} ${user.phonenumber}`,
+      // render: (_, user) => `${user.prefix || ''} ${user.phonenumber}`,
+      render: (_, user) => formatPhone(user.phonenumber, user.prefix),
     },
     {
       title: "Is Verified",
@@ -84,7 +86,7 @@ const UnverifiedUsers = ({user="vendors"}) => {
   ];
 
   return (
-    <div className="p2">
+    <div id="preview-root" style={{ position: 'relative' }} className="p2">
       <h4>Unverified {userType== "vendors"?"Vendors":"Rider"}</h4>
       {/* <div className="mb-3">
         <Button

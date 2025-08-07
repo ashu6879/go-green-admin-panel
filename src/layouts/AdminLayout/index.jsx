@@ -11,6 +11,7 @@ import { ConfigContext } from 'contexts/ConfigContext';
 import * as actionType from 'store/actions';
 import Loader from 'components/Loader/Loader';
 import SessionManager from '../../components/SessionManager/SessionManager';
+import useDashboard from './useDashboard';
 
 // -----------------------|| ADMIN LAYOUT ||-----------------------//
 
@@ -20,7 +21,7 @@ export default function AdminLayout() {
   const bodyElement = document.body;
   const { collapseLayout, collapseMenu } = configContext.state;
   const { dispatch } = configContext;
-
+ const { notifications, addNotification, clearNotifications } = useDashboard();
   useEffect(() => {
     if (windowSize.width > 992 && windowSize.width <= 1024) {
       dispatch({ type: actionType.COLLAPSE_MENU });

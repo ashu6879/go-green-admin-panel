@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getAllVendors, updateVendorStatus } from '../../../../../services/apiService';
+import { getAllRiders, updateRiderStatus } from '../../../../services/apiService';
+import axios from 'axios';
 
-export default function useVendors() {
+export default function useRider() {
   const [vendors, setVendors] = useState([]);
   const [allVendors, setAllVendors] = useState([]); // Store all vendors for client-side filtering
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,7 @@ export default function useVendors() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    getAllVendors()
+    getAllRiders()
       .then((res) => {
         if (res.success === false) {
           setError(res.message || 'Failed to fetch vendors');
@@ -61,20 +62,19 @@ export default function useVendors() {
     setPageSize(newPageSize);
   };
 
-  // Toggle vendor status using centralized API service
-  const handleToggleStatus = async (vendorId, newStatus) => {
-    try {
-      const res = await updateVendorStatus(vendorId, newStatus);
-      if (res.success) {
-        setAllVendors(prev => prev.map(v => v.vendor_id === vendorId ? { ...v, status: newStatus } : v));
-      } else {
-        setError(res.error || 'Failed to update vendor status');
-      }
-    } catch (err) {
-      setError('Failed to update vendor status');
-    }
-  };
-
+  // Toggle vendor status using new API
+  const handleToggleStatus = async (riderId, newStatus) => {
+     try {
+       const res = await updateRiderStatus(riderId, newStatus);
+       if (res.success) {
+         setAllVendors(prev => prev.map(v => v.rider_id === riderId ? { ...v, status: newStatus } : v));
+       } else {
+         setError(res.error || 'Failed to update rider status');
+       }
+     } catch (err) {
+       setError('Failed to update rider status');
+     }
+   };
 
   return {
     vendors,

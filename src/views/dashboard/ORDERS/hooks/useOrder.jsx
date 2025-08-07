@@ -52,6 +52,13 @@ const useOrder = () => {
     fetchOrders();
   }, [fetchOrders]);
 
+  // Reset page to 1 when search or vendorId changes
+  useEffect(() => {
+    if (page !== 1) {
+      setPage(1);
+    }
+  }, [search, vendorId]);
+
   return {
     orders,
     total,

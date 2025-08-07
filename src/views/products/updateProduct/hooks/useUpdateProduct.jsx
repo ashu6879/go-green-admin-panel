@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { message } from "antd";
 import { getAllCategories, getAllSubCategoriesbyID, productfetchBrands, addProduct, getAllVendors, updateProduct, saveOrUpdateDiscount } from "../../../../services/apiService";
-import { normalizeAttributes } from "../../../../services/utils/gen_utility";
+import { normalizeAttributes, priceParsed } from "../../../../services/utils/gen_utility";
 import axios from "axios";
 // import { getAllCategories, getAllSubCategoriesbyID, productfetchBrands, addProduct } from "../../services/apiService";
 
@@ -25,39 +25,89 @@ export default function useUpdateProduct(form,data) {
   const [editingAddonIdx, setEditingAddonIdx] = useState(null); // null or index
   const [newAddonDraft, setNewAddonDraft] = useState({ name: '', price: '' });
   const [selectedUnit, setSelectedUnit] = useState();
+  const [discountPercent, setDiscountPercent] = useState(0);
 
   const [productImage, setProductImage] = useState([]);
 
  useEffect(() => {
   if(data){
-    // setHasVariants(product.variants.length > 0);
-          // setHasAddOns(product.addons.length > 0);
-          // setVariants(product.variants);
-          // setAddons(product.addons);
+    
 
 
 
 
-          const {attributes,extraAttributes} = normalizeAttributes(data?.attributes);
-          // console.log("has  Variants",data?.variants?.length > 0);
-          // console.log("hasAddOns",data?.addons?.length > 0);
-          // console.log("extraAttributes",extraAttributes)
+          // const {attributes,extraAttributes} = normalizeAttributes(data?.attributes);
+        
           setHasVariants(data?.variants?.length > 0);
           setHasAddOns(data?.addons?.length > 0);
           setVariants(data?.variants);
           setAddons(data?.addons);
           // setattributes(data?.attributes);
+          // form.setFieldsValue({
+          //   has_variants: data?.variants?.length > 0 || data?.addons?.length > 0, // or false based on your data
+          //   attributes: attributes,
+          //   stock:data?.stock,
+          //   product_brand: data?.brand_id,
+          //   vendor:data?.vendor_id,
+          //   unit:extraAttributes?.unit,
+          //   quantity:extraAttributes?.quantity,
+          //   is_available:extraAttributes?.is_available,
+          //   // price:extraAttributes?.price,
+          //   discount_price:data?.discounted_value,
+
+          //     //frpm other remove duplicate frpm below                        
+          //   name: data.name,
+          //   description: data.description,
+          //   price: data.price,
+          //   discount_price: data.discount_price,
+          //   quantity: data.quantity,
+          //   unit: data.unit,
+          //   category: data?.category_id,
+          //   sub_category: data?.sub_category,
+          //   // product_brand: product?.brand_id,
+          //   vendor: data?.vendor_id,
+          //   product_image: data.product_image,
+          //   has_variants: data.has_variants,
+          //   has_addons: data.has_addons,
+          //   variants: data.variants,
+          //   addons: data.addons,
+          //   discount_percent: data.discount_percent,
+
+          // });
+
+
           form.setFieldsValue({
-            has_variants: data?.variants?.length > 0 || data?.addons?.length > 0, // or false based on your data
-            attributes: attributes,
-            stock:data?.stock,
-            unit:extraAttributes?.unit,
-            quantity:extraAttributes?.quantity,
-            is_available:extraAttributes?.is_available,
-            // price:extraAttributes?.price,
-            discount_price:data?.discounted_value,
+            name: data.name,
+            description: data.description,
+            price: data.price,
+            discount_price: data.discount_price || data.discounted_value,
+            discount_percent: data.discount_percent,
+          
+            quantity: data.product_quantity,
+            unit: data.product_unit,
+            is_available: data.is_available,
+          
+            stock: data?.stock,
+            category: data?.category_id,
+            sub_category: data?.sub_category,
+          
+            product_brand: data?.brand_id,
+            vendor: data?.vendor_id,
+          
+            product_image: data?.product_image,
+          
+            has_variants: data?.has_variants ?? (data?.variants?.length > 0 || data?.addons?.length > 0),
+            has_addons: data?.has_addons,
+            variants: data?.variants,
+            addons: data?.addons,
+          
+             attributes: data?.attributes?.map(item => ({
+              key: item.attribute_key ?? item.key,
+              value: item.attribute_value ?? item.value
+            })),
           });
-          setSelectedUnit(extraAttributes?.unit);
+          
+          setSelectedUnit(data?.product_unit);
 
           if(data?.featured_image){
             const defaultFileList = [
@@ -86,6 +136,7 @@ export default function useUpdateProduct(form,data) {
     });
     productfetchBrands().then((response) => {
       if (response.success) setBrands(response.data);
+     
     });
     getAllVendors(true).then((response) => {
       if (response.success && Array.isArray(response.data)) {
@@ -95,8 +146,10 @@ export default function useUpdateProduct(form,data) {
   }, []);
 
   // Fetch subcategories when category changes
-  const handleCategoryChange = async (catId) => {
+  const handleCategoryChange = async (catId,refresh=true) => {
+    if(refresh){
     form.setFieldsValue({ sub_category: undefined });
+    }
     if (catId) {
       const response = await getAllSubCategoriesbyID(catId);
       if (response.success) setSubCategories(response.data);
@@ -158,8 +211,13 @@ export default function useUpdateProduct(form,data) {
 
 
   const handleImageChange = ({ fileList }) => {
-    setProductImage(fileList);
-  };
+  fileList.forEach(file => {
+    if (file.originFileObj && !file.url) {
+      file.url = URL.createObjectURL(file.originFileObj);
+    }
+  });
+  setProductImage([...fileList]);
+};
 
   const handleVendorChange = (value) => {
     setSelectedVendor(value);
@@ -260,6 +318,105 @@ export default function useUpdateProduct(form,data) {
     setAddons(newAddons);
   };
 
+
+
+
+
+  const handleUnitChange = (unitValue) => {
+    form.setFieldsValue({
+      unit: unitValue,
+      quantity: "", // clear quantity on unit change
+    });
+  };
+  // Upload handlers
+  const normFile = (e) => {
+    if (Array.isArray(e)) return e;
+    return e && e.fileList;
+  };
+
+
+  const validateFileUpload = async () => {
+    if (productImage.length > 0) {
+      return Promise.resolve();
+    }
+    return Promise.reject(new Error("Please upload a product image"));
+  };
+
+  // Custom upload props for preview
+  const uploadProps = {
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('You can only upload image files!');
+        return false;
+      }
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('Image must be smaller than 5MB!');
+        return false;
+      }
+      return false; // Prevent auto upload
+    },
+    // onChange: (info) => {
+    //   console.log('Product image onChange:', info.fileList); // Debug log
+    //   // Handle preview
+    //   if (info.fileList) {
+    //     info.fileList.forEach(file => {
+    //       if (file.originFileObj && !file.url) {
+    //         file.url = URL.createObjectURL(file.originFileObj);
+    //       }
+    //     });
+    //   }
+    //   // Update form field value
+    //   form.setFieldsValue({ product_image: info.fileList });
+    //   // Trigger form validation
+    //   setTimeout(() => {
+    //     form.validateFields(['product_image']);
+    //   }, 100);
+    // },
+    onPreview: (file) => {
+      if (file.url) {
+        window.open(file.url);
+      }
+    },
+    showUploadList: {
+      showPreviewIcon: true,
+      showRemoveIcon: true,
+      showDownloadIcon: false,
+    },
+    itemRender: (originNode, file, fileList, actions) => {
+      return (
+        <div className="upload-preview-wrapper">
+          <img 
+            src={file.url || file.thumbUrl} 
+            alt={file.name}
+            className="upload-preview-image"
+          />
+          <div 
+            className="upload-preview-close"
+            onClick={() => {
+              actions.remove();
+              const currentFiles = form.getFieldValue('product_image') || [];
+              const updatedFiles = currentFiles.filter(f => f.uid !== file.uid);
+              form.setFieldsValue({ product_image: updatedFiles });
+              setTimeout(() => {
+                form.validateFields(['product_image']);
+              }, 100);
+            }}
+          >
+            ×
+          </div>
+        </div>
+      );
+    }
+  };
+
+
+
+
+
+
+
   // Form submit handler
   const handleFinish = async (values) => {
     setLoading(true);
@@ -304,25 +461,27 @@ export default function useUpdateProduct(form,data) {
 
       const formData = new FormData();
       formData.append("id", data.id);
-      if (values.product_brand ) formData.append("product_brand", values.product_brand);
+      if (values.product_brand ) formData.append("brand_id", values.product_brand);
       if (values.name) formData.append("name", values.name);
       if (values.description) formData.append("description", values.description);
-      if (values.category) formData.append("category", values.category);
+      if (values.category) formData.append("category_id", values.category);
       if (values.sub_category) formData.append("sub_category", values.sub_category);
     
       //  if (productData.product_discount_percentage) formData.append("discount_percentage", productData.product_discount_percentage); 
      
     
     if (!hasVariants) {
-        if (values.unit) formData.append("unit", values.unit);
-        if (values.quantity !== undefined && values.quantity !== null && values.quantity !== "") formData.append("quantity", values.quantity);
+        // if (values.unit) formData.append("unit", values.unit);
+        // if (values.quantity !== undefined && values.quantity !== null && values.quantity !== "") formData.append("quantity", values.quantity);
         if (values.price !== undefined && values.price !== null && values.price !== "") formData.append("price", values.price);
+        formData.append("stock", values.stock);
 
       } else {
         formData.append("is_available", values.is_available ? 1 : 0);
         
-        formData.append("price", 0);
- 
+        // formData.append("price", 0);
+        formData.append("price", priceParsed(variants, values.price));
+        formData.append("stock", 0);
 
       }
 
@@ -333,9 +492,10 @@ export default function useUpdateProduct(form,data) {
       //   // formData.append("vendor_id", selectedVendor);
       // }
       // Product Image
-      if (values.product_image && values.product_image[0]?.originFileObj) {
+      console.log("productImage",productImage )
+      if (productImage && productImage[0]?.originFileObj) {
         
-        formData.append("featuredImage", values.product_image[0].originFileObj);
+        formData.append("featuredImage", productImage[0].originFileObj);
       }
       // Gallery Images
       console.log(galleryImages);
@@ -347,14 +507,22 @@ export default function useUpdateProduct(form,data) {
         }
       });
       // Attributes
-      const extraAttributes = [
-        {key: "unit", value: values?.unit},
-        {key: "quantity", value: values?.quantity},
-      ]
+      // const extraAttributes = [
+      //   {key: "unit", value: values?.unit},
+      //   {key: "quantity", value: values?.quantity},
+      // ]
       // if (values.attributes) {
-        formData.append("attributes", JSON.stringify([...values.attributes,...extraAttributes]));      // }
+        // formData.append("attributes", JSON.stringify([...values.attributes,...extraAttributes]));      // }
+        // const allAttributes = values.attributes?.length > 0
+        // ? [...values.attributes, ...extraAttributes]
+        // : extraAttributes;
+  
+
+     if(values.attributes?.length > 0) formData.append("attributes", JSON.stringify(values.attributes));
       // Variants
       if (hasVariants && variants.length > 0) {
+        formData.append("product_unit", 1);
+        formData.append("product_quantity", "unit");
         formData.append("variants", JSON.stringify(variants.map(variant => ({
           ...variant,
           discount_percentage: variant.price && variant.discount_price && variant.discount_price <= variant.price 
@@ -363,7 +531,9 @@ export default function useUpdateProduct(form,data) {
         }))));
       }else{
         formData.append("variants", JSON.stringify([]));
-      }
+        formData.append("product_unit", values.unit);
+        formData.append("product_quantity", values.quantity);
+      } 
       // Add-ons
       if (addons.length > 0 && hasAddOns) {
         formData.append("addons", JSON.stringify(addons));
@@ -383,13 +553,7 @@ export default function useUpdateProduct(form,data) {
         console.log(result);
 
         setShowModal(true);
-        // form.resetFields();
-        // setGalleryImages([]);
-        // setGalleryPreviews([]);
-        // setVariants([]);
-        // setAddons([]);
-        // setHasVariants(false);
-        // setHasAddOns(false);
+      
       } else {
         message.error("Failed to add product. Please try again.");
       }
@@ -452,5 +616,10 @@ export default function useUpdateProduct(form,data) {
     removeAddon,
     updateAddon,
     productImage, handleImageChange,
+    normFile,
+    handleUnitChange, validateFileUpload,uploadProps,
+    discountPercent, setDiscountPercent,
+    
+
   };
 } 

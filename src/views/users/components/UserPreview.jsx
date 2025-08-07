@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import  "/src/assets/scss/pages/usermodal.scss";
-import { Spin, Badge, Tag } from "antd";
+import { Spin, Badge, Tag, Image } from "antd";
 import { 
   User, 
   FileText, 
@@ -12,12 +12,13 @@ import {
   MapPin, 
   CreditCard, 
   Receipt, 
-  Image, 
+  Image as ImageIcon, 
   Shield, 
   Bike, 
   Flag, 
   FileImage 
 } from "lucide-react";
+import { formatPhone } from "../../../services/utils/gen_utility";
 
 const UserPreview = ({ user, userType, loading }) => {
   if (!user) return null;
@@ -36,21 +37,7 @@ const UserPreview = ({ user, userType, loading }) => {
     </div>
   );
 
-  const ImagePreview = ({ src, alt, label }) => (
-    <div className="image-card ">
-      <div className="image-card-header">
-        <Image size={16} />
-        <span className="image-label">{label}</span>
-      </div>
-      <div className="image-container">
-        <img 
-          src={import.meta.env.VITE_IMAGE_BASE_URL + src}
-          alt={alt}
-          className="preview-image"
-        />
-      </div>
-    </div>
-  );
+
 
   return (
     <>
@@ -63,10 +50,13 @@ const UserPreview = ({ user, userType, loading }) => {
             <div className="profile-header">
               <div className="profile-avatar">
                 {user.profile_pic ? (
-                  <img
-                    src={import.meta.env.VITE_IMAGE_BASE_URL + user.profile_pic}
-                    alt="Profile"
+                  <Image
+                    src={user.profile_pic}
+                    alt="Profile Picture"
                     className="avatar-image"
+                    preview={{
+                      mask: 'Click to preview'
+                    }}
                   />
                 ) : (
                   <div className="avatar-placeholder">
@@ -121,7 +111,7 @@ const UserPreview = ({ user, userType, loading }) => {
                 <InfoCard
                   icon={Phone}
                   label="Phone Number"
-                  value={`${user.prefix} ${user.phonenumber}`}
+                  value={formatPhone(user.phonenumber, user.prefix)}
                 />
                 <InfoCard
                   icon={Mail}
@@ -190,59 +180,56 @@ const UserPreview = ({ user, userType, loading }) => {
                 {/* Documents & Images */}
                 <div className="section-divider">
                   <h4 className="section-header">
-                    <Image size={20} />
+                    <ImageIcon size={20} />
                     Documents & Images
                   </h4>
-                  <div className="image-grid">
-                    {user.store_image && (
-                      <ImagePreview
-                        src={user.store_image}
-                        alt="Store"
-                        label="Store Image"
-                      />
-                    )}
-                    {user.identity_proof && (
-                      <ImagePreview
-                        src={user.identity_proof}
-                        alt="Identity Proof"
-                        label="Identity Proof"
-                      />
-                    )}
-                    {user.bussiness_license_number_pic && (
-                      <ImagePreview
-                        src={user.bussiness_license_number_pic}
-                        alt="Business License"
-                        label="Business License Document"
-                      />
-                    )}
-                    {user.gst_number_pic && (
-                      <ImagePreview
-                        src={user.gst_number_pic}
-                        alt="GST Document"
-                        label="GST Document"
-                      />
-                    )}
-                  </div>
+                  
+                  <Image.PreviewGroup>
+                    <div className="image-grid">
+                      {user.store_image && (
+                        <Image src={user.store_image} alt="Store Image" />
+                      )}
+                      {user.identity_proof && (
+                        <Image src={user.identity_proof} alt="Identity Proof" />
+                      )}
+                      {user.bussiness_license_number_pic && (
+                        <Image src={user.bussiness_license_number_pic} alt="Business License" />
+                      )}
+                      {user.gst_number_pic && (
+                        <Image src={user.gst_number_pic} alt="GST Document" />
+                      )}
+                    </div>
+                  </Image.PreviewGroup>
                 </div>
               </>
             ) : (
               <>
-                {/* Rider Information */}
+                {/* Personal Information */}
                 <div className="section-divider">
                   <h4 className="section-header">
-                    <Bike size={20} />
-                    Rider Information
+                    <User size={20} />
+                    Personal Information
                   </h4>
                   <div className="info-grid">
+                    <InfoCard
+                      icon={Calendar}
+                      label="Date of Birth"
+                      value={user.dob}
+                    />
+                    <InfoCard
+                      icon={Phone}
+                      label="Other Phone"
+                      value={user.other_phone_number}
+                    />
+                    <InfoCard
+                      icon={MapPin}
+                      label="Address"
+                      value={user.address}
+                    />
                     <InfoCard
                       icon={FileText}
                       label="SIN Code"
                       value={user.sin_code}
-                    />
-                    <InfoCard
-                      icon={CreditCard}
-                      label="License Number"
-                      value={user.license_number}
                     />
                     <InfoCard
                       icon={Flag}
@@ -257,21 +244,110 @@ const UserPreview = ({ user, userType, loading }) => {
                   </div>
                 </div>
 
-                {/* Documents */}
+                {/* License Information */}
+                <div className="section-divider">
+                  <h4 className="section-header">
+                    <CreditCard size={20} />
+                    License Information
+                  </h4>
+                  <div className="info-grid">
+                    <InfoCard
+                      icon={CreditCard}
+                      label="License Number"
+                      value={user.license_number}
+                    />
+                    <InfoCard
+                      icon={Calendar}
+                      label="License Expiry Date"
+                      value={user.license_expiry_date}
+                    />
+                  </div>
+                </div>
+
+                {/* Vehicle Information */}
+                <div className="section-divider">
+                  <h4 className="section-header">
+                    <Bike size={20} />
+                    Vehicle Information
+                  </h4>
+                  <div className="info-grid">
+                    <InfoCard
+                      icon={User}
+                      label="Vehicle Owner Name"
+                      value={user.vehicle_owner_name}
+                    />
+                    <InfoCard
+                      icon={FileText}
+                      label="Registration Number"
+                      value={user.vehicle_registration_number}
+                    />
+                    <InfoCard
+                      icon={Bike}
+                      label="Vehicle Type"
+                      value={user.vehicle_type}
+                    />
+                    <InfoCard
+                      icon={Calendar}
+                      label="Registration Expiry"
+                      value={user.registraion_expiry_date}
+                    />
+                  </div>
+                </div>
+
+                {/* Documents & Images */}
                 <div className="section-divider">
                   <h4 className="section-header">
                     <FileImage size={20} />
-                    Documents
+                    Documents & Images
                   </h4>
-                  <div className="image-grid">
-                    {user.identity_proof && (
-                      <ImagePreview
-                        src={user.identity_proof}
-                        alt="Identity Proof"
-                        label="Identity Proof"
-                      />
-                    )}
-                  </div>
+                  <Image.PreviewGroup>
+                    <div className="image-grid">
+                      {user.profile_pic && (
+                        <div className="document-card">
+                          <div className="card-header">
+                            <User size={16} />
+                            <span>Profile Picture</span>
+                          </div>
+                          <div className="card-image">
+                            <Image src={user.profile_pic} alt="Profile Picture" />
+                          </div>
+                        </div>
+                      )}
+                      {user.identity_proof && (
+                        <div className="document-card">
+                          <div className="card-header">
+                            <Shield size={16} />
+                            <span>Identity Proof</span>
+                          </div>
+                          <div className="card-image">
+                            <Image src={user.identity_proof} alt="Identity Proof" />
+                          </div>
+                        </div>
+                      )}
+                      {user.rider_license_image && (
+                        <div className="document-card">
+                          <div className="card-header">
+                            <CreditCard size={16} />
+                            <span>Rider License</span>
+                          </div>
+                          <div className="card-image">
+                            <Image src={user.rider_license_image} alt="Rider License" />
+                          </div>
+                        </div>
+                      )}
+                      {user.registration_doc && (
+                        <div className="document-card">
+                          <div className="card-header">
+                            <FileText size={16} />
+                            <span>Registration Document</span>
+                          </div>
+                          <div className="card-image">
+                            <Image src={user.registration_doc} alt="Registration Document" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Image.PreviewGroup>
                 </div>
               </>
             )}

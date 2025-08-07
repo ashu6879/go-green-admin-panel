@@ -110,8 +110,8 @@ const Orders = () => {
           optionFilterProp="children"
         >
           {vendors.map(vendor => (
-            <Select.Option key={vendor.id} value={vendor.name}>
-              {vendor.store_name}
+            <Select.Option key={vendor.id} value={vendor.id}>
+              {vendor.name}
             </Select.Option>
           ))}
         </Select>

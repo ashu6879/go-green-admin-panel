@@ -9,9 +9,10 @@ import ProductVariants from "../components/ProductVariants";
 import { unitOptions, quantityOptions } from "../components/options";
 import Addons from "../components/Addons";
 import { useParams } from "react-router-dom";
-import useUpdateProduct from "./hooks/useUpdateProduct";
+// import useUpdateProduct from "./hooks/useUpdateProduct";
 import { formatPrice } from "../../../services/utils/gen_utility";
-
+import "../../../assets/scss/pages/uploder_override.scss"
+import useUpdateProduct from "./hooks/useUpdateProduct";
 const { Option } = Select;
 const { Dragger } = Upload;
 
@@ -19,6 +20,7 @@ const { Dragger } = Upload;
 
 
 const UpdateProduct = () => {                   
+  const [form] = Form.useForm();
 
 
 
@@ -31,32 +33,8 @@ const UpdateProduct = () => {
         console.log("response",response)
         if (response.success) {
           const product = response.product;
-          setProductdata(product);
-          // form.setFieldsValue(response.product);
-          form.setFieldsValue({
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            discount_price: product.discount_price,
-            quantity: product.quantity,
-            unit: product.unit,
-            category: product?.category_id,
-            sub_category: product?.sub_category,
-            product_brand: product?.brand_id,
-            vendor: product?.vendor_id,
-            product_image: product.product_image,
-            has_variants: product.has_variants,
-            has_addons: product.has_addons,
-            variants: product.variants,
-            addons: product.addons,
-            discount_percent: product.discount_percent,
-          });
-          // setHasVariants(product.variants.length > 0);
-          // setHasAddOns(product.addons.length > 0);
-          // setVariants(product.variants);
-          // setAddons(product.addons);
-
-
+          setProductdata(product);     
+          handleCategoryChange(product?.category_id,false);
         }
       };
       fetchProduct();
@@ -64,7 +42,7 @@ const UpdateProduct = () => {
 
 
 
-  const [form] = Form.useForm();
+
   // Use the custom hook for all logic/state
   const {
     categories,
@@ -119,6 +97,8 @@ const UpdateProduct = () => {
     handleImageChange,
     selectedUnit,
     setSelectedUnit,
+    normFile,
+    handleUnitChange, validateFileUpload,uploadProps,discountPercent, setDiscountPercent
   } = useUpdateProduct(form,productdata);
 
   // Add common unit options
@@ -127,198 +107,10 @@ const UpdateProduct = () => {
   // Track selected unit for dynamic quantity suggestions
 
   // Track discount percent for preview and logic
-  const [discountPercent, setDiscountPercent] = useState(0);
 
-  // Add custom CSS for upload preview layout
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .ant-upload-list {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-        margin-top: 8px !important;
-      }
-      .ant-upload-list-item {
-        width: auto !important;
-        height: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-        background: none !important;
-      }
-      .ant-upload-list-item-container {
-        width: auto !important;
-        height: auto !important;
-      }
-      .upload-preview-container .ant-upload-list {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
-
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     const response = await getAllCategories();
-  //     if (response.success) setCategories(response.data);
-  //   };
-  //   fetchCategories();
-  // }, []);
-
-  // useEffect(() => {
-  //   const fetchBrands = async () => {
-  //     const response = await productfetchBrands();
-  //     if (response.success) setBrands(response.data);
-  //   };
-  //   fetchBrands();
-  // }, []);
+ 
 
 
-
-  const handleUnitChange = (unitValue) => {
-    form.setFieldsValue({
-      unit: unitValue,
-      quantity: "", // clear quantity on unit change
-    });
-  };
-  // Upload handlers
-  const normFile = (e) => {
-    if (Array.isArray(e)) return e;
-    return e && e.fileList;
-  };
-
-  // Custom validation for file uploads
-  // const validateFileUpload = (rule, value) => {
-  //   console.log('Validating file upload:', value); // Debug log
-  //   if (!value || value.length === 0) {
-  //     return Promise.reject(new Error(rule.message));
-  //   }
-  //   // Check if files have originFileObj (actual files)
-  //   const hasValidFiles = value.some(file => file.originFileObj || file.url);
-  //   if (!hasValidFiles) {
-  //     return Promise.reject(new Error(rule.message));
-  //   }
-  //   return Promise.resolve();
-  // };
-  // const validateFileUpload = async (_, value) => {
-  //   if (value && value.length > 0) {
-  //     const hasFile = value.some(file => file?.originFileObj || file?.url);
-  //     if (hasFile) {
-  //       return Promise.resolve();
-  //     }
-  //   }
-  //   return Promise.reject(new Error("Please upload a product image"));
-  // };
-  const validateFileUpload = async () => {
-    if (productImage.length > 0) {
-      return Promise.resolve();
-    }
-    return Promise.reject(new Error("Please upload a product image"));
-  };
-
-  // Custom upload props for preview
-  const uploadProps = {
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('You can only upload image files!');
-        return false;
-      }
-      const isLt5M = file.size / 1024 / 1024 < 5;
-      if (!isLt5M) {
-        message.error('Image must be smaller than 5MB!');
-        return false;
-      }
-      return false; // Prevent auto upload
-    },
-    onChange: (info) => {
-      console.log('Product image onChange:', info.fileList); // Debug log
-      // Handle preview
-      if (info.fileList) {
-        info.fileList.forEach(file => {
-          if (file.originFileObj && !file.url) {
-            file.url = URL.createObjectURL(file.originFileObj);
-          }
-        });
-      }
-      // Update form field value
-      form.setFieldsValue({ product_image: info.fileList });
-      // Trigger form validation
-      setTimeout(() => {
-        form.validateFields(['product_image']);
-      }, 100);
-    },
-    onPreview: (file) => {
-      if (file.url) {
-        window.open(file.url);
-      }
-    },
-    showUploadList: {
-      showPreviewIcon: true,
-      showRemoveIcon: true,
-      showDownloadIcon: false,
-    },
-    itemRender: (originNode, file, fileList, actions) => {
-      return (
-        <div style={{ 
-          display: 'inline-flex', 
-          position: 'relative', 
-          margin: '4px',
-          flexShrink: 0
-        }}>
-          <img 
-            src={file.url || file.thumbUrl} 
-            alt={file.name}
-            style={{ 
-              width: 50, 
-              height: 50, 
-              objectFit: 'cover', 
-              borderRadius: 4,
-              border: '1px solid #d9d9d9',
-              display: 'block'
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              top: -5,
-              right: -5,
-              background: '#ff4d4f',
-              color: 'white',
-              borderRadius: '50%',
-              width: 20,
-              height: 20,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              fontSize: '12px',
-              border: '2px solid white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-              zIndex: 1
-            }}
-            onClick={() => {
-              actions.remove();
-              // Update form field value after removal
-              const currentFiles = form.getFieldValue('product_image') || [];
-              const updatedFiles = currentFiles.filter(f => f.uid !== file.uid);
-              form.setFieldsValue({ product_image: updatedFiles });
-              // Trigger validation after removal
-              setTimeout(() => {
-                form.validateFields(['product_image']);
-              }, 100);
-            }}
-          >
-            ×
-          </div>
-        </div>
-      );
-    }
-  };
 
   return (
     <div className="p2 d-flex justify-content-center">
@@ -337,6 +129,8 @@ const UpdateProduct = () => {
                   <Form.Item
                     label="Vendor"
                     required
+                    name={"vendor"}
+                    disabled
                   >
                     <Select
                       placeholder="Select Vendor"
@@ -365,7 +159,7 @@ const UpdateProduct = () => {
                   >
                     <Select placeholder="Select Brand" showSearch optionFilterProp="children">
                       {brands.map((brand) => (
-                        <Option key={brand.id} value={String(brand.id)}>{brand.name}</Option>
+                        <Option key={brand.id} value={brand.id}>{brand.name}</Option>
                       ))}
                     </Select>
                   </Form.Item>
@@ -440,6 +234,8 @@ const UpdateProduct = () => {
                       <Dragger
                         name="product_image"
                         maxCount={1}
+                        // multiple={false} // Allow only single file upload
+
                         fileList={productImage} // 👈 External fileList
                         onChange={handleImageChange}
                         accept="image/*"

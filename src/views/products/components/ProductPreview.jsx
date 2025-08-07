@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Button, Card, Divider } from 'antd';
 import { Grid } from 'antd';
+import { formatPrice } from '../../../services/utils/gen_utility';
 
 const { useBreakpoint } = Grid;
 

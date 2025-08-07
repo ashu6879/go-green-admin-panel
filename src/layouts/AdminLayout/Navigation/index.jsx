@@ -161,9 +161,25 @@ export default function ModernNavigation() {
     // Find current menu item and its parent based on location
     const findCurrentItemAndParent = (items, path, parentId = null) => {
       for (const item of items) {
+        // Check for exact match first
         if (item.url === path) {
           return { currentKey: item.id, parentKey: parentId };
         }
+        
+        // Check for dynamic route match  IF ANY ERROR ACCURED TO LINE 169 TO 181 COMMENT KR DENA 
+        if (item.url && item.url.includes(':')) {
+          const urlPattern = item.url.replace(/:[^/]+/g, '[^/]+');
+          const regex = new RegExp(`^${urlPattern}$`);
+          if (regex.test(path)) {
+            return { currentKey: item.id, parentKey: parentId };
+          }
+        }
+        
+        // Check for base path match (e.g., /vendors matches /vendors/123)
+        if (item.url && !item.url.includes(':') && path.startsWith(item.url + '/')) {
+          return { currentKey: item.id, parentKey: parentId };
+        }
+        
         if (item.children) {
           const found = findCurrentItemAndParent(item.children, path, item.id);
           if (found) return found;

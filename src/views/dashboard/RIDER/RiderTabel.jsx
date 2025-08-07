@@ -2,8 +2,8 @@ import React from 'react';
 import { Table, Input, Space, Avatar, Button, Badge, Switch, Tooltip, Tag } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import useVendors from './hooks/useVendors';
-import { convertTimeRange, formatPhone } from '../../../../services/utils/gen_utility';
+import { convertTimeRange, formatPhone } from '../../../services/utils/gen_utility';
+import useRider from './hooks/useRider';
 
 export default function VendorTable() {
   const navigate = useNavigate();
@@ -17,39 +17,40 @@ export default function VendorTable() {
     onSearch,
     onPageChange,
     handleToggleStatus,
-  } = useVendors();
+  } = useRider();
 
   const columns = [
     {
       title: 'Sr. No.',
       key: 'srno',
-      width: 80,
+      width: 60,
       render: (text, record, index) => (page - 1) * pageSize + index + 1,
       align: 'center',
     },
     {
       title: 'Image',
-      dataIndex: 'store_image',
-      key: 'storeImage',
+      dataIndex: 'profile_pic',
+      key: 'profile_pic',
       render: (img) => <Avatar size={45} src={img} alt="store" />,
       width: 50,
     },
     {
-      title: 'Store Name',
-      dataIndex: 'store_name',
-      key: 'storeName',
+      title: 'Rider Name',
+      dataIndex: 'name',
+      key: 'name',
       width: 200,
       render: (text, record) => (
+        //firstname+lastname and first lertter of each word capital 
         <div style={{ minWidth: 180 }}>
-          <b>{text ? text.charAt(0).toUpperCase() + text.slice(1) : ''}</b>
-          <div style={{ fontSize: 12, color: '#888', fontWeight: 400, marginTop: 2 }}>
-            {record.store_address || '-'}
+          <b>{  record.firstname + ' ' + record.lastname ? record.firstname.charAt(0).toUpperCase() + record.firstname.slice(1) + ' ' + record.lastname.charAt(0).toUpperCase() + record.lastname.slice(1) : ''}</b>
+          <div style={{ fontSize: 12, color: '#888', fontWeight: 400, marginTop: 2 ,textDecoration: 'italic'}}>
+            { record.username || ''}
           </div>
         </div>
       ),
     },
     {
-      title: 'Customer ID',
+      title: 'Rider ID',
       dataIndex: 'custom_id',
       key: 'customId',
       width: 140,
@@ -68,31 +69,13 @@ export default function VendorTable() {
           {status === 1 ? 'Active' : 'Inactive'}
         </Tag>
       ),
-      // render: (status) => (
-      //   <span
-      //     style={{
-      //       display: 'inline-block',
-      //       minWidth: 60,
-      //       padding: '2px 12px',
-      //       borderRadius: 12,
-      //       backgroundColor: status === 1 ? 'rgba(82,196,26,0.15)' : 'rgba(180,180,180,0.15)',
-      //       color: status === 1 ? '#52c41a' : '#888',
-      //       fontWeight: 500,
-      //       border: `1px solid ${status === 1 ? 'rgba(82,196,26,0.4)' : 'rgba(180,180,180,0.4)'}`,
-      //       opacity: 0.7,
-      //       textAlign: 'center',
-      //     }}
-      //   >
-      //     {status === 1 ? 'Active' : 'Inactive'}
-      //   </span>
-      // ),
     },
     {
-      title: 'Timing',
-      dataIndex: 'vendor_timing',
-      key: 'timing',
+      title: 'Vehicle Number',
+      dataIndex: 'vehicle_registration_number',
+      key: 'vehicle_registration_number',
       width: 140,
-      render: (timing,row) => <span style={{ minWidth: 120, display: 'inline-block' }}>{row?.vendor_start_time && row.vendor_close_time && convertTimeRange(row.vendor_start_time, row.vendor_close_time) || '-'}</span>,
+      // render: (timing,row) => <span style={{ minWidth: 120, display: 'inline-block' }}>{row?.vendor_start_time && row.vendor_close_time && convertTimeRange(row.vendor_start_time, row.vendor_close_time) || '-'}</span>,
     },
     {
       title: 'Phone',
@@ -126,16 +109,16 @@ export default function VendorTable() {
               // onChange={...} // TODO: implement status toggle handler
               checkedChildren="Active"
               unCheckedChildren="Inactive"
-              onChange={checked => handleToggleStatus(record.vendor_id, checked ? 1 : 0)}
+              onChange={checked => handleToggleStatus(record.rider_id, checked ? 1 : 0)}
 
             />
           </Tooltip>
           <Tooltip title="View">
             <Button
               size="small"
-              type="link"
+              type="link"rider_id
               icon={<EyeOutlined />}
-              onClick={() => navigate(`/vendors/${record.vendor_id}`)}
+              onClick={() => navigate(`/riders/${record.rider_id}`)}
             />
           </Tooltip>
           <Tooltip title="Edit">

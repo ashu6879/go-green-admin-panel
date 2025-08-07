@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { message } from "antd";
-import { getAllCategories, getAllSubCategoriesbyID, productfetchBrands, addProduct, getAllVendors } from "../../../services/apiService";
+import { getAllCategories, getAllSubCategoriesbyID, productfetchBrands, addProduct, getAllVendors, saveOrUpdateDiscount } from "../../../services/apiService";
 import { has } from "lodash-es";
+import { priceParsed } from "../../../services/utils/gen_utility";
 // import { getAllCategories, getAllSubCategoriesbyID, productfetchBrands, addProduct } from "../../services/apiService";
 
 export default function useAddProductHook(form,data) {
@@ -334,10 +335,12 @@ export default function useAddProductHook(form,data) {
         }
       });
   
-      if (values.price !== "" && values.price !== undefined && values.price !== null) {
-        formData.append("price", values.price);
-      }
+      // if (values.price !== "" && values.price !== undefined && values.price !== null) {
+        formData.append("price", hasVariants ? priceParsed(variants, values.price) : values.price);
+      // }
   
+
+      
       if (values.discount_price !== "" && values.discount_price !== undefined && values.discount_price !== null) {
         formData.append("discount_price", values.discount_price);
       }
@@ -373,20 +376,23 @@ export default function useAddProductHook(form,data) {
         if (file) formData.append("galleryImages", file);
       });
   
-      // Attributes
-      const extraAttributes = [
-        { key: "unit", value: values.unit },
-        { key: "quantity", value: values.quantity }
-      ];
-      const allAttributes = values.attributes?.length > 0
-        ? [...values.attributes, ...extraAttributes]
-        : extraAttributes;
+      // // Attributes
+      // const extraAttributes = [
+      //   { key: "unit", value: values.unit },
+      //   { key: "quantity", value: values.quantity }
+      // ];
+      // const allAttributes = values.attributes?.length > 0
+      //   ? [...values.attributes, ...extraAttributes]
+      //   : extraAttributes;
   
-      formData.append("attributes", JSON.stringify(allAttributes));
+     if(values.attributes?.length > 0) formData.append("attributes", JSON.stringify(values.attributes));
   
       // Variants
       if (hasVariants && variants.length > 0) {
         formData.append("variants", JSON.stringify(variantsWithDiscount));
+      }else{
+        formData.append("unit", values.unit);
+        formData.append("quantity", values.quantity);
       }
   
       // Add-ons
@@ -398,6 +404,14 @@ export default function useAddProductHook(form,data) {
       const result = await addProduct(formData);
   
       if (result.success) {
+  console.log(result)
+
+  if(discountPercent && discountPercent > 0 && result?.data?.product_id){
+        await saveOrUpdateDiscount({
+                product_id: result?.data?.product_id,
+                discount_percent: discountPercent
+               })
+              }
         setShowModal(true);
         form.resetFields();
         setGalleryImages([]);
@@ -471,7 +485,10 @@ export default function useAddProductHook(form,data) {
     uploadProps,
     normFile,
     validateFileUpload,
-    handleUnitChange
+    handleUnitChange,
+
+    discountPercent, setDiscountPercent,
+    selectedUnit, setSelectedUnit
   };
 } 
 

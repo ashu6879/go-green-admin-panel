@@ -4,6 +4,7 @@ import AdminLayout from 'layouts/AdminLayout';
 import GuestLayout from 'layouts/GuestLayout';
 import SingleVendor from '../views/dashboard/VENDORS/AllVendors/SingleVendor';
 import UpdateProduct from '../views/products/updateProduct/upDateProduct';
+import SingleProduct from '../views/products/viewSingleProduct/singleProduct';
 
 
 // import Orders from '../views/dashboard/ORDERS/Orders';
@@ -11,6 +12,8 @@ import UpdateProduct from '../views/products/updateProduct/upDateProduct';
 // import VendorTable from '../views/dashboard/VENDORS/AllVendors/vendorTabel';
 const Orders = lazy(() => import('../views/dashboard/ORDERS/Orders'));
 const VendorTypeList = lazy(() => import('../views/dashboard/VENDORS/vendorType/vendorTypeList'));
+const RiderTable = lazy(() => import('../views/dashboard/RIDER/RiderTabel'));
+const SingleRider = lazy(() => import('../views/dashboard/RIDER/SingleRider'));
 const VendorTable = lazy(() => import('../views/dashboard/VENDORS/AllVendors/vendorTabel'));
 
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
@@ -109,8 +112,12 @@ const MainRoutes = {
         },
 
         {
-          path: '/all-Products',
+          path: '/products',
           element: <AllProducts />
+        },
+        {
+          path: '/products/:id',        // 👈 Yeh pehle likha hai
+          element: <SingleProduct />
         },
 
         {
@@ -172,6 +179,14 @@ const MainRoutes = {
         {
           path: '/vendors/:id',
           element: <SingleVendor/>
+        },
+        {
+          path: '/riders/',
+          element: <RiderTable />
+        },
+        {
+          path: '/riders/:id',
+          element: <SingleRider/>
         }
       ]
     },
