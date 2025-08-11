@@ -19,18 +19,18 @@ import productData from 'data/productTableData';
 // -----------------------|| DASHBOARD SALES ||-----------------------//
 export default function DashSales() {
   return (
-    <Row>
+    <Row className="pt-3 ms-0 me-0">
       <Col md={12} xl={6}>
         <Card className="flat-card">
           <div className="row-table">
             <Card.Body className="col-sm-6 br">
-              <FlatCard params={{ title: 'Customers', iconClass: 'text-primary mb-1', icon: 'group', value: '1000' }} />
+              <FlatCard params={{ title: 'Total Customers', iconClass: 'text-primary mb-1', icon: 'group', value: '1000' }} />
             </Card.Body>
             <Card.Body className="col-sm-6 d-none d-md-table-cell d-lg-table-cell d-xl-table-cell card-body br">
-              <FlatCard params={{ title: 'Revenue', iconClass: 'text-primary mb-1', icon: 'language', value: '1252' }} />
+              <FlatCard params={{ title: 'Total Revenue', iconClass: 'text-primary mb-1', icon: 'language', value: '1252' }} />
             </Card.Body>
             <Card.Body className="col-sm-6 card-bod">
-              <FlatCard params={{ title: 'Growth', iconClass: 'text-primary mb-1', icon: 'unarchive', value: '600' }} />
+              <FlatCard params={{ title: 'Total Growth', iconClass: 'text-primary mb-1', icon: 'unarchive', value: '600' }} />
             </Card.Body>
           </div>
           <div className="row-table">
@@ -52,6 +52,50 @@ export default function DashSales() {
             </Card.Body>
           </div>
         </Card>
+      </Col>
+      <Col md={12} xl={6}>
+        <Row>
+          <Col sm={6}>
+            <ProductCard params={{ title: 'Total Profit', primaryText: '$1,783', icon: 'card_giftcard' }} />
+          </Col>
+          <Col sm={6}>
+            <ProductCard params={{ variant: 'primary', title: 'Total Orders', primaryText: '15,830', icon: 'local_mall' }} />
+          </Col>
+          <Col sm={6}>
+            <ProductCard params={{ variant: 'primary', title: 'Average Price', primaryText: '$6,780', icon: 'monetization_on' }} />
+          </Col>
+          <Col sm={6}>
+            <ProductCard params={{ title: 'Product Sold', primaryText: '6,784', icon: 'local_offer' }} />
+          </Col>
+        </Row>
+      </Col>
+
+      <Col md={12} xl={6}>
+        <Card>
+          <Card.Header>
+            <h5>Department wise monthly sales report</h5>
+          </Card.Header>
+          <Card.Body>
+            <Row className="pb-2">
+              <div className="col-auto m-b-10">
+                <h3 className="mb-1">$21,356.46</h3>
+                <span>Total Sales</span>
+              </div>
+              <div className="col-auto m-b-10">
+                <h3 className="mb-1">$1935.6</h3>
+                <span>Average</span>
+              </div>
+            </Row>
+            <Chart {...SalesAccountChartData()} />
+          </Card.Body>
+        </Card>
+      </Col>
+      <Col md={12} xl={6}>
+        {/* Feed Table */}
+        <FeedTable {...feedData} />
+      </Col>
+
+      <Col md={12} xl={6}>
         <Row>
           <Col md={6}>
             <Card className="support-bar overflow-hidden">
@@ -106,26 +150,9 @@ export default function DashSales() {
             </Card>
           </Col>
         </Row>
-      </Col>
-      <Col md={12} xl={6}>
-        <Card>
-          <Card.Header>
-            <h5>Department wise monthly sales report</h5>
-          </Card.Header>
-          <Card.Body>
-            <Row className="pb-2">
-              <div className="col-auto m-b-10">
-                <h3 className="mb-1">$21,356.46</h3>
-                <span>Total Sales</span>
-              </div>
-              <div className="col-auto m-b-10">
-                <h3 className="mb-1">$1935.6</h3>
-                <span>Average</span>
-              </div>
-            </Row>
-            <Chart {...SalesAccountChartData()} />
-          </Card.Body>
-        </Card>
+
+        {/* Product Table */}
+        {/* <ProductTable {...productData} /> */}
       </Col>
       <Col md={12} xl={6}>
         <Card>
@@ -139,26 +166,8 @@ export default function DashSales() {
             </Row>
           </Card.Body>
         </Card>
-        {/* Product Table */}
-        <ProductTable {...productData} />
-      </Col>
-      <Col md={12} xl={6}>
-        <Row>
-          <Col sm={6}>
-            <ProductCard params={{ title: 'Total Profit', primaryText: '$1,783', icon: 'card_giftcard' }} />
-          </Col>
-          <Col sm={6}>
-            <ProductCard params={{ variant: 'primary', title: 'Total Orders', primaryText: '15,830', icon: 'local_mall' }} />
-          </Col>
-          <Col sm={6}>
-            <ProductCard params={{ variant: 'primary', title: 'Average Price', primaryText: '$6,780', icon: 'monetization_on' }} />
-          </Col>
-          <Col sm={6}>
-            <ProductCard params={{ title: 'Product Sold', primaryText: '6,784', icon: 'local_offer' }} />
-          </Col>
-        </Row>
         {/* Feed Table */}
-        <FeedTable {...feedData} />
+        {/* <FeedTable {...feedData} /> */}
       </Col>
     </Row>
   );

@@ -2,7 +2,7 @@
 
 const FeedData = {
   wrapclass: 'feed-card',
-  height: '385px',
+  height: '487px',
   title: 'Feeds',
   options: [
     {

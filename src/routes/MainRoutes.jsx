@@ -5,6 +5,7 @@ import GuestLayout from 'layouts/GuestLayout';
 import SingleVendor from '../views/dashboard/VENDORS/AllVendors/SingleVendor';
 import UpdateProduct from '../views/products/updateProduct/upDateProduct';
 import SingleProduct from '../views/products/viewSingleProduct/singleProduct';
+import DashSales2 from '../views/dashboard/DashSales/index2';
 
 
 // import Orders from '../views/dashboard/ORDERS/Orders';
@@ -57,6 +58,10 @@ const MainRoutes = {
         {
           path: '/dashboard',
           element: <DashboardSales />
+        },
+        {
+          path: '/dashboard2',
+          element: <DashSales2 />
         },
         {
           path: '/typography',

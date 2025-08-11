@@ -6,6 +6,7 @@
     height: 100%;
     width: 100%;
     margin: 0;
+    margin-top: 19px;
 
     .br {
       border-right: 1px solid var(--bs-border-color);
@@ -26,7 +27,7 @@
       margin-right: 0;
     }
 
-    > [class*='col-'] {
+    >[class*='col-'] {
       display: table-cell;
       float: none;
       table-layout: fixed;

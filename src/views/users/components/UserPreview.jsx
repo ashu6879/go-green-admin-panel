@@ -57,6 +57,8 @@ const UserPreview = ({ user, userType, loading }) => {
                     preview={{
                       mask: 'Click to preview'
                     }}
+                    width={100}
+                    height={100}
                   />
                 ) : (
                   <div className="avatar-placeholder">
@@ -309,7 +311,7 @@ const UserPreview = ({ user, userType, loading }) => {
                             <span>Profile Picture</span>
                           </div>
                           <div className="card-image">
-                            <Image src={user.profile_pic} alt="Profile Picture" />
+                            <Image width={100} height={100} src={user.profile_pic} alt="Profile Picture" />
                           </div>
                         </div>
                       )}

@@ -15,7 +15,7 @@ export default function FlatCard({ params }) {
       <Col sm={4}>
         <i className={iconClass.join(' ')}>{params.icon}</i>
       </Col>
-      <Col sm={8} className="text-md-center">
+      <Col sm={8} className="">
         <h5>{params.value}</h5>
         <span>{params.title}</span>
       </Col>

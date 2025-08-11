@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Modal, Button as BsButton } from 'react-bootstrap';
-import { Form, Input, Select, Upload, Button, Space, message, Checkbox, Switch } from 'antd';
+import { Form, Input, Select, Upload, Button, Space, message, Checkbox, Switch, InputNumber } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined, DollarOutlined } from '@ant-design/icons';
 import ProductVariants from './components/ProductVariants';
 import { unitOptions } from './components/options';
 import Addons from './components/Addons';
 import '../../assets/scss/pages/uploder_override.scss';
 import useAddProductHook from './hooks/useAddProductHook';
+import { useWatch } from 'antd/es/form/Form';
+import PricePreview from './viewSingleProduct/components/PricePreview';
 const { Option } = Select;
 const { Dragger } = Upload;
 
@@ -62,6 +64,9 @@ const ProductRegistration = ({ data }) => {
     handleUnitChange
   } = useAddProductHook(form, data);
 
+  const enableDiscount = useWatch('enable_discount', form); // 👈 WATCHING THE FIELD
+  const price = useWatch('price', form); // 👈 WATCHING THE FIELD
+  const discountPrice = useWatch('discount_price', form); // 👈 WATCHING THE FIELD
 
 
   return (
@@ -325,43 +330,128 @@ const ProductRegistration = ({ data }) => {
                           prefix={<DollarOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
                           onChange={(e) => {
                             const price = Number(e.target.value);
+
                             const discount = Number(form.getFieldValue('discount_price'));
                             form.setFieldsValue({ price: price });
+                            form.setFieldsValue({ discount_price: price });
+
                             if (discount && discount > price) {
                               form.setFieldsValue({ discount_price: price });
                             }
+                            // if(!discount){
+                            // }
                             const percent = price && discount && discount <= price ? Math.round(((price - discount) / price) * 100) : 0;
                             setDiscountPercent(percent);
                           }}
                         />
                       </Form.Item>
                     </Col>
+
+
                     <Col md={6} xs={24}>
-                      <Form.Item
-                        label="Discount Price"
-                        name="discount_price"
-                        rules={[{ required: true, message: 'Please enter discount price' }]}
-                      >
-                        <Input
-                          type="number"
-                          placeholder="Discount Price"
-                          onChange={(e) => {
-                            const discount = Number(e.target.value);
-                            const price = Number(form.getFieldValue('price'));
-                            if (discount > price) {
-                              form.setFieldsValue({ discount_price: price });
-                              setDiscountPercent(0);
-                              return;
-                            }
-                            form.setFieldsValue({ discount_price: discount });
-                            const percent = price && discount && discount <= price ? Math.round(((price - discount) / price) * 100) : 0;
-                            setDiscountPercent(percent);
-                          }}
-                        />
-                      </Form.Item>
-                    </Col>
+  <Form.Item name="enable_discount" valuePropName="checked" initialValue={false}>
+    <Checkbox
+      onChange={e => {
+        const checked = e.target.checked;
+        const price = Number(form.getFieldValue('price'));
+
+        if (checked) {
+          form.setFieldsValue({ discount_price: price, discount_percent: 0 });
+        } else {
+          form.setFieldsValue({ discount_price: undefined, discount_percent: undefined });
+        }
+      }}
+    >
+      Do you want to add a discount?
+    </Checkbox>
+  </Form.Item>
+</Col>
+
+
+{enableDiscount && (
+  <div style={{ marginBottom: 24 ,display:'flex',justifyContent:'center',gap:16,padding:'0 12px !important'}}>
+    <Col md={6} xs={6}>
+      <Form.Item
+        label="Selling Price"
+        name="discount_price"
+        rules={[
+          { required: true, message: 'Please enter selling price' },
+          ({ getFieldValue }) => ({
+            validator(_, value) {
+              const productPrice = getFieldValue('price');
+              if (value === undefined || value === null || value === '') {
+                return Promise.reject('Please enter selling price');
+              }
+              if (Number(value) > Number(productPrice)) {
+                return Promise.reject('Selling price (discount) cannot be greater than product price');
+              }
+              return Promise.resolve();
+            }
+          })
+        ]}
+      >
+        <InputNumber
+          style={{ width: '100%' }}
+          placeholder="Discount Price"
+          prefix={<DollarOutlined />}
+          min={0}
+          onChange={(discount) => {
+            if (price && Number(discount) <= Number(price)) {
+              const percent = parseFloat((((Number(price) - discount) / Number(price)) * 100).toFixed(2));
+              form.setFieldsValue({ discount_percent: percent });
+              setDiscountPercent(percent);
+            } else {
+              form.setFieldsValue({ discount_percent: 0 });
+              setDiscountPercent(0);
+            }
+          }}
+        />
+      </Form.Item>
+    </Col>
+
+    {/* <Col>
+      <div style={{ fontWeight: 600, paddingTop: 30 }}>or</div>
+    </Col> */}
+
+    <Col md={6} xs={6}>
+      <Form.Item
+        label="Discount Percent"
+        name="discount_percent"
+        rules={[{ required: true, message: 'Please enter discount percent' }]}
+      >
+        <InputNumber
+          style={{ width: '100%' }}
+          placeholder="Discount Percent"
+          // prefix={<PercentageOutlined />}
+          min={0}
+          max={100}
+          onChange={(percent) => {
+            const price = Number(form.getFieldValue('price'));
+            if (!price || percent > 100) {
+              form.setFieldsValue({ discount_percent: 0, discount_price: price });
+              setDiscountPercent(0);
+              return;
+            }
+            const discount = parseFloat((price - (price * percent) / 100).toFixed(2));
+            form.setFieldsValue({ discount_percent: percent, discount_price: discount });
+            setDiscountPercent(percent);
+          }}
+        />
+      </Form.Item>
+    </Col>
+  </div>
+)}
+
+
                     {/* Price Preview Section */}
                     <Col md={12} xs={24}>
+  <PricePreview
+    price={price || 0}
+    discountPrice={discountPrice || 0}
+    enableDiscount={enableDiscount}
+  />
+</Col>
+                    {/* <Col md={12} xs={24}>
                       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
                         <span style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>Price Preview:</span>
                         {[1].map((idx) => {
@@ -385,7 +475,9 @@ const ProductRegistration = ({ data }) => {
                           );
                         })}
                       </div>
-                    </Col>
+                    </Col> */}
+
+
                     <Col md={6} xs={24}>
                       <Form.Item label="Unit" name="unit" rules={[{ required: true, message: 'Please select a unit' }]}>
                         <Select

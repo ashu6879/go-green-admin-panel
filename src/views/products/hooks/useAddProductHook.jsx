@@ -350,9 +350,9 @@ export default function useAddProductHook(form,data) {
       }
   
       if (!hasVariants) {
-        if (values.unit) formData.append("unit", values.unit);
+        if (values.unit) formData.append("product_unit", values.unit);
         if (values.quantity !== "" && values.quantity !== undefined && values.quantity !== null) {
-          formData.append("quantity", values.quantity);
+          formData.append("product_quantity", values.quantity);
         }
         formData.append("stock", Number(values.stock));
       } else {
@@ -390,10 +390,11 @@ export default function useAddProductHook(form,data) {
       // Variants
       if (hasVariants && variants.length > 0) {
         formData.append("variants", JSON.stringify(variantsWithDiscount));
-      }else{
-        formData.append("unit", values.unit);
-        formData.append("quantity", values.quantity);
       }
+      // }else{
+      //   formData.append("product_unit", values.unit);
+      //   formData.append("product_quantity", values.quantity);
+      // }
   
       // Add-ons
       if (addons.length > 0) {
@@ -406,7 +407,7 @@ export default function useAddProductHook(form,data) {
       if (result.success) {
   console.log(result)
 
-  if(discountPercent && discountPercent > 0 && result?.data?.product_id){
+  if(!hasVariants && discountPercent && discountPercent > 0 && result?.data?.product_id){
         await saveOrUpdateDiscount({
                 product_id: result?.data?.product_id,
                 discount_percent: discountPercent
@@ -549,7 +550,7 @@ const handleFinishold = async (values) => {
    if (productData.product_discount_percentage) formData.append("discount_percentage", productData.product_discount_percentage); 
     if (!hasVariants) {
       if (values.unit) formData.append("unit", values.unit);
-      if (values.quantity !== undefined && values.quantity !== null && values.quantity !== "") formData.append("quantity", values.quantity);
+      if (values.quantity !== undefined && values.quantity !== null && values.quantity !== "") formData.append("product_quantity", values.quantity);
   formData.append("stock", Number(values.stock));
     } else {
       formData.append("is_available", values.is_available ? 1 : 0);
@@ -571,7 +572,7 @@ const handleFinishold = async (values) => {
     // console.log("values.attributes",values.attributes)
     const extraAttributes = [
       {key: "unit", value: values.unit},
-      {key: "quantity", value: values.quantity},
+      {key: "product_quantity", value: values.quantity},
     ]
       // if(hasVariants){
       //   extraAttributes.push({key: "is_available", value: Number(values.is_available)})
