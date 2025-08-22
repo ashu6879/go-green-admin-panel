@@ -521,8 +521,8 @@ export default function useUpdateProduct(form,data) {
      if(values.attributes?.length > 0) formData.append("attributes", JSON.stringify(values.attributes));
       // Variants
       if (hasVariants && variants.length > 0) {
-        formData.append("product_unit", 1);
-        formData.append("product_quantity", "unit");
+        formData.append("product_unit", "unit");
+        formData.append("product_quantity", "1");
         formData.append("variants", JSON.stringify(variants.map(variant => ({
           ...variant,
           discount_percentage: variant.price && variant.discount_price && variant.discount_price <= variant.price 

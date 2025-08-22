@@ -117,7 +117,7 @@ const UpdateProduct = () => {
       <div style={{ width: '100%', maxWidth: 700 }}>
         <Card className="borderless w-100">
           <Card.Body>
-            <h4 className="mb-3 f-w-400 text-center">Add Product</h4>
+            <h4 className="mb-3 f-w-400 text-center">Update Product</h4>
             <Form
               form={form}
               layout="vertical"
@@ -547,7 +547,7 @@ const UpdateProduct = () => {
                 </Col>
                 <Col md={24} className="text-center">
                   <Button type="primary" htmlType="submit" loading={loading} style={{ width: 200 }}>
-                    Add Product
+                    Update Product
                   </Button>
                 </Col>
               </Row>
@@ -558,10 +558,10 @@ const UpdateProduct = () => {
       {/* Success Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Product Created Successfully</Modal.Title>
+          <Modal.Title>Product Updated Successfully</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>The Product has been added successfully!</p>
+          <p>The Product has been updated successfully!</p>
         </Modal.Body>
         <Modal.Footer>
           <BsButton variant="success" onClick={() => setShowModal(false)}>
